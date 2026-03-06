@@ -11,11 +11,12 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final currentTheme = ref.watch(themeProvider);
     final theme = Theme.of(context);
+    final size = MediaQuery.of(context).size;
+    final topPadding = MediaQuery.of(context).padding.top;
 
     return Scaffold(
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 20, 16, 100),
+      body: ListView(
+        padding: EdgeInsets.fromLTRB(16, topPadding + (size.height * 0.02), 16, 100),
           physics: const BouncingScrollPhysics(),
           children: [
             // Header
@@ -179,7 +180,6 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ],
         ),
-      ),
     );
   }
 
@@ -212,10 +212,6 @@ class SettingsScreen extends ConsumerWidget {
           _buildThemeOption(
             context, ref, 'Light', Icons.light_mode_rounded,
             AppThemeMode.light, current == AppThemeMode.light, theme,
-          ),
-          _buildThemeOption(
-            context, ref, 'Dark', Icons.dark_mode_rounded,
-            AppThemeMode.dark, current == AppThemeMode.dark, theme,
           ),
           _buildThemeOption(
             context, ref, 'AMOLED', Icons.brightness_2_rounded,

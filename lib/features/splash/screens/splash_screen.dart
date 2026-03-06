@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:prnote/core/providers/notes_provider.dart';
+import 'package:prnote/core/theme/theme_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -21,12 +22,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   @override
   void initState() {
     super.initState();
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-      ),
-    );
 
     _controller = AnimationController(
       vsync: this,
@@ -79,8 +74,22 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final themeMode = ref.watch(themeProvider);
+    final isLight = themeMode == AppThemeMode.light;
+
+    // Set status bar icons based on theme
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: isLight ? Brightness.dark : Brightness.light,
+    ));
+
+    final bgColor = theme.scaffoldBackgroundColor;
+    final subtitleColor = isLight ? Colors.black38 : Colors.white38;
+    final noteTextColor = isLight ? Colors.black54 : Colors.white70;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A2E),
+      backgroundColor: bgColor,
       body: Center(
         child: AnimatedBuilder(
           animation: _controller,
@@ -133,7 +142,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                             style: GoogleFonts.inter(
                               fontSize: 36,
                               fontWeight: FontWeight.w300,
-                              color: Colors.white70,
+                              color: noteTextColor,
                               letterSpacing: -1,
                             ),
                           ),
@@ -146,7 +155,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w300,
-                        color: Colors.white38,
+                        color: subtitleColor,
                         letterSpacing: 2,
                       ),
                     ),

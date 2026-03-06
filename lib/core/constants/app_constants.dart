@@ -21,7 +21,6 @@ class AppConstants {
 
   // Theme modes
   static const String themeModeLight = 'light';
-  static const String themeModeDark = 'dark';
   static const String themeModeAmoled = 'amoled';
 
   // Default values

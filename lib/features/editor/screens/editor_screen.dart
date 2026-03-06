@@ -172,6 +172,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final topPadding = MediaQuery.of(context).padding.top;
 
     if (_isLoading) {
       return Scaffold(
@@ -187,11 +188,11 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
       },
       child: Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
-        body: SafeArea(
-          child: Column(
-            children: [
-              // Toolbar
-              _buildToolbar(theme),
+        body: Column(
+          children: [
+            SizedBox(height: topPadding),
+            // Toolbar
+            _buildToolbar(theme),
 
               // Editor
               Expanded(
@@ -295,7 +296,6 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
               ),
             ],
           ),
-        ),
       ),
     );
   }

@@ -1,12 +1,27 @@
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:prnote/core/router/app_router.dart';
 import 'package:prnote/core/theme/theme_provider.dart';
 import 'package:prnote/core/database/database_helper.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize FFI database factory for desktop platforms
+  if (Platform.isLinux || Platform.isMacOS || Platform.isWindows) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
+
+  // Initialize database
+  try {
+    await DatabaseHelper().database;
+  } catch (_) {
+    // Database init failed, app will handle gracefully
+  }
 
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([
@@ -27,9 +42,6 @@ void main() async {
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
   runApp(const ProviderScope(child: PRnoteApp()));
-
-  // Initialize database after app boot so startup never blocks on SQLite features.
-  DatabaseHelper().database.catchError((_) {});
 }
 
 class PRnoteApp extends ConsumerWidget {

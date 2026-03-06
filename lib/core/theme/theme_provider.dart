@@ -5,17 +5,17 @@ import 'package:prnote/core/constants/app_constants.dart';
 import 'package:prnote/core/theme/app_theme.dart';
 
 /// Theme mode enum including AMOLED
-enum AppThemeMode { light, dark, amoled }
+enum AppThemeMode { light, amoled }
 
 /// Theme state notifier for global theme management
 class ThemeNotifier extends StateNotifier<AppThemeMode> {
-  ThemeNotifier() : super(AppThemeMode.dark) {
+  ThemeNotifier() : super(AppThemeMode.amoled) {
     _loadTheme();
   }
 
   Future<void> _loadTheme() async {
     final prefs = await SharedPreferences.getInstance();
-    final themeStr = prefs.getString(AppConstants.prefThemeMode) ?? AppConstants.themeModeDark;
+    final themeStr = prefs.getString(AppConstants.prefThemeMode) ?? AppConstants.themeModeAmoled;
     state = _fromString(themeStr);
   }
 
@@ -29,8 +29,6 @@ class ThemeNotifier extends StateNotifier<AppThemeMode> {
     switch (state) {
       case AppThemeMode.light:
         return AppTheme.lightTheme;
-      case AppThemeMode.dark:
-        return AppTheme.darkTheme;
       case AppThemeMode.amoled:
         return AppTheme.amoledTheme;
     }
@@ -40,12 +38,10 @@ class ThemeNotifier extends StateNotifier<AppThemeMode> {
     switch (value) {
       case AppConstants.themeModeLight:
         return AppThemeMode.light;
-      case AppConstants.themeModeDark:
-        return AppThemeMode.dark;
       case AppConstants.themeModeAmoled:
         return AppThemeMode.amoled;
       default:
-        return AppThemeMode.dark;
+        return AppThemeMode.amoled;
     }
   }
 
@@ -53,8 +49,6 @@ class ThemeNotifier extends StateNotifier<AppThemeMode> {
     switch (mode) {
       case AppThemeMode.light:
         return AppConstants.themeModeLight;
-      case AppThemeMode.dark:
-        return AppConstants.themeModeDark;
       case AppThemeMode.amoled:
         return AppConstants.themeModeAmoled;
     }
@@ -72,8 +66,6 @@ final themeDataProvider = Provider<ThemeData>((ref) {
   switch (mode) {
     case AppThemeMode.light:
       return AppTheme.lightTheme;
-    case AppThemeMode.dark:
-      return AppTheme.darkTheme;
     case AppThemeMode.amoled:
       return AppTheme.amoledTheme;
   }
