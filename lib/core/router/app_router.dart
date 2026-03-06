@@ -52,53 +52,48 @@ class AppShell extends StatelessWidget {
                 ]
               : null,
         ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.only(top: 4, bottom: 2),
-            child: BottomNavigationBar(
-              currentIndex: currentIndex,
-              onTap: (index) {
-                if (index != currentIndex) {
-                  context.go(_tabs[index]);
-                }
-              },
-              items: const [
-                BottomNavigationBarItem(
-                  icon: Padding(
-                    padding: EdgeInsets.only(bottom: 3),
-                    child: Icon(Icons.home_outlined, size: 24),
-                  ),
-                  activeIcon: Padding(
-                    padding: EdgeInsets.only(bottom: 3),
-                    child: Icon(Icons.home_rounded, size: 24),
-                  ),
-                  label: 'Home',
-                ),
-                BottomNavigationBarItem(
-                  icon: Padding(
-                    padding: EdgeInsets.only(bottom: 3),
-                    child: Icon(Icons.folder_outlined, size: 24),
-                  ),
-                  activeIcon: Padding(
-                    padding: EdgeInsets.only(bottom: 3),
-                    child: Icon(Icons.folder_rounded, size: 24),
-                  ),
-                  label: 'Folders',
-                ),
-                BottomNavigationBarItem(
-                  icon: Padding(
-                    padding: EdgeInsets.only(bottom: 3),
-                    child: Icon(Icons.settings_outlined, size: 24),
-                  ),
-                  activeIcon: Padding(
-                    padding: EdgeInsets.only(bottom: 3),
-                    child: Icon(Icons.settings_rounded, size: 24),
-                  ),
-                  label: 'Settings',
-                ),
-              ],
+        child: BottomNavigationBar(
+          currentIndex: currentIndex,
+          onTap: (index) {
+            if (index != currentIndex) {
+              context.go(_tabs[index]);
+            }
+          },
+          items: const [
+            BottomNavigationBarItem(
+              icon: Padding(
+                padding: EdgeInsets.only(bottom: 3),
+                child: Icon(Icons.home_outlined, size: 24),
+              ),
+              activeIcon: Padding(
+                padding: EdgeInsets.only(bottom: 3),
+                child: Icon(Icons.home_rounded, size: 24),
+              ),
+              label: 'Home',
             ),
-          ),
+            BottomNavigationBarItem(
+              icon: Padding(
+                padding: EdgeInsets.only(bottom: 3),
+                child: Icon(Icons.folder_outlined, size: 24),
+              ),
+              activeIcon: Padding(
+                padding: EdgeInsets.only(bottom: 3),
+                child: Icon(Icons.folder_rounded, size: 24),
+              ),
+              label: 'Folders',
+            ),
+            BottomNavigationBarItem(
+              icon: Padding(
+                padding: EdgeInsets.only(bottom: 3),
+                child: Icon(Icons.settings_outlined, size: 24),
+              ),
+              activeIcon: Padding(
+                padding: EdgeInsets.only(bottom: 3),
+                child: Icon(Icons.settings_rounded, size: 24),
+              ),
+              label: 'Settings',
+            ),
+          ],
         ),
       ),
     );

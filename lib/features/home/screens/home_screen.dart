@@ -40,7 +40,7 @@ class HomeScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Top row: Logo + actions
+                  // Top row: Logo + date
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -66,38 +66,26 @@ class HomeScreen extends ConsumerWidget {
                           ],
                         ),
                       ),
-                      Row(
-                        children: [
-                          // Search icon
-                          _ActionButton(
-                            icon: Icons.search_rounded,
-                            onTap: () => SearchOverlay.show(context),
-                            theme: theme,
-                            isLight: isLight,
+                      // Date badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          DateFormat('MMM d').format(DateTime.now()),
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: theme.colorScheme.primary,
                           ),
-                          const SizedBox(width: 8),
-                          // Date badge
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              DateFormat('MMM d').format(DateTime.now()),
-                              style: GoogleFonts.inter(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: theme.colorScheme.primary,
-                              ),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ],
                   ),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
 
                   // Greeting + note count
                   Row(
@@ -133,19 +121,62 @@ class HomeScreen extends ConsumerWidget {
                       ),
                     ],
                   ),
+
+                  const SizedBox(height: 14),
+
+                  // ── Search Bar (full-width, tappable) ──
+                  GestureDetector(
+                    onTap: () => SearchOverlay.show(context),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+                      decoration: BoxDecoration(
+                        color: isLight
+                            ? theme.colorScheme.surface
+                            : theme.colorScheme.surface.withValues(alpha: 0.6),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: theme.dividerColor.withValues(alpha: isLight ? 0.4 : 0.25),
+                          width: 0.8,
+                        ),
+                        boxShadow: isLight
+                            ? [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.04),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.search_rounded,
+                            size: 20,
+                            color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.45),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Search notes...',
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
+                                color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.45),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
 
-          // Divider
-          SliverToBoxAdapter(
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20),
-              height: 0.5,
-              color: theme.dividerColor.withValues(alpha: 0.3),
-            ),
-          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 4)),
 
           // Notes list
           notesAsync.when(
@@ -246,48 +277,6 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-// ─── Action Button ────────────────────────────────────
-class _ActionButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-  final ThemeData theme;
-  final bool isLight;
-
-  const _ActionButton({
-    required this.icon,
-    required this.onTap,
-    required this.theme,
-    required this.isLight,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: theme.dividerColor.withValues(alpha: 0.3),
-          ),
-          boxShadow: isLight
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
-                    blurRadius: 4,
-                    offset: const Offset(0, 1),
-                  ),
-                ]
-              : null,
-        ),
-        child: Icon(icon, size: 21, color: theme.textTheme.bodyMedium?.color),
-      ),
-    );
-  }
-}
 
 // ─── Section Header ───────────────────────────────────
 class _SectionHeader extends StatelessWidget {

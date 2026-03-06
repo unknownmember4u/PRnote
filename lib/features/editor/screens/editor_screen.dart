@@ -54,9 +54,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
 
       if (note == null) {
         setState(() => _isLoading = false);
-        if (context.mounted) {
-          context.go('/home');
-        }
+        if (context.mounted) context.go('/home');
         return;
       }
 
@@ -66,7 +64,6 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
         _contentController.text = note.content;
         _isLoading = false;
       });
-      // Save as last edited
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(AppConstants.prefLastEditedNoteId, note.id);
       _startAutoSave();
@@ -111,7 +108,6 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
         content: _contentController.text,
       );
       await ref.read(notesProvider.notifier).updateNote(updated);
-      // Save version on exit
       await ref.read(notesProvider.notifier).saveVersion(updated);
       if (!mounted) return;
       setState(() {
@@ -139,7 +135,13 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Copied to clipboard', style: GoogleFonts.inter()),
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle_rounded, color: Color(0xFF26A69A), size: 18),
+                const SizedBox(width: 8),
+                Text('Copied to clipboard', style: GoogleFonts.inter()),
+              ],
+            ),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -173,18 +175,26 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final topPadding = MediaQuery.of(context).padding.top;
+    final isLight = theme.brightness == Brightness.light;
 
     if (_isLoading) {
       return Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
-        body: const Center(child: CircularProgressIndicator()),
+        body: Center(
+          child: SizedBox(
+            width: 28, height: 28,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.5, color: theme.colorScheme.primary,
+            ),
+          ),
+        ),
       );
     }
 
-    return WillPopScope(
-      onWillPop: () async {
-        await _saveAndExit();
-        return true;
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) await _saveAndExit();
       },
       child: Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
@@ -192,122 +202,141 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
           children: [
             SizedBox(height: topPadding),
             // Toolbar
-            _buildToolbar(theme),
+            _buildToolbar(theme, isLight),
 
-              // Editor
-              Expanded(
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Title field
-                      TextField(
-                        controller: _titleController,
-                        style: GoogleFonts.inter(
+            // Editor
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Title field
+                    TextField(
+                      controller: _titleController,
+                      style: GoogleFonts.inter(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w700,
+                        color: theme.textTheme.displayLarge?.color,
+                        height: 1.3,
+                        letterSpacing: -0.3,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Title',
+                        hintStyle: GoogleFonts.inter(
                           fontSize: 26,
                           fontWeight: FontWeight.w700,
-                          color: theme.textTheme.displayLarge?.color,
-                          height: 1.3,
+                          color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.3),
                         ),
-                        decoration: InputDecoration(
-                          hintText: 'Title',
-                          hintStyle: GoogleFonts.inter(
-                            fontSize: 26,
-                            fontWeight: FontWeight.w700,
-                            color: theme.textTheme.bodySmall?.color?.withAlpha((0.4 * 255).round()),
-                          ),
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                        maxLines: null,
-                        textCapitalization: TextCapitalization.sentences,
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        contentPadding: EdgeInsets.zero,
                       ),
+                      maxLines: null,
+                      textCapitalization: TextCapitalization.sentences,
+                    ),
 
-                      // Date info
-                      if (_currentNote != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4, bottom: 16),
-                          child: Row(
-                            children: [
-                              Text(
+                    // Date & save info
+                    if (_currentNote != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4, bottom: 16),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.06),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
                                 DateFormat('MMM d, yyyy · h:mm a')
                                     .format(_currentNote!.updatedAt),
                                 style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  color: theme.textTheme.bodySmall?.color?.withAlpha((0.5 * 255).round()),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.5),
                                 ),
                               ),
-                              if (_lastSaved != null) ...[
-                                Text(
-                                  ' · ',
-                                  style: TextStyle(
-                                    color: theme.textTheme.bodySmall?.color?.withAlpha((0.3 * 255).round()),
-                                  ),
+                            ),
+                            if (_lastSaved != null) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF26A69A).withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(6),
                                 ),
-                                Icon(
-                                  Icons.check_circle_rounded,
-                                  size: 12,
-                                  color: const Color(0xFF26A69A),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.check_circle_rounded,
+                                      size: 12,
+                                      color: Color(0xFF26A69A),
+                                    ),
+                                    const SizedBox(width: 3),
+                                    Text(
+                                      'Saved',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500,
+                                        color: const Color(0xFF26A69A),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(width: 3),
-                                Text(
-                                  'Saved',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 12,
-                                    color: const Color(0xFF26A69A),
-                                  ),
-                                ),
-                              ],
+                              ),
                             ],
-                          ),
+                          ],
                         ),
-
-                      // Content field
-                      TextField(
-                        controller: _contentController,
-                        style: GoogleFonts.inter(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w400,
-                          color: theme.textTheme.bodyLarge?.color,
-                          height: 1.7,
-                        ),
-                        decoration: InputDecoration(
-                          hintText: 'Start writing...',
-                          hintStyle: GoogleFonts.inter(
-                            fontSize: 16,
-                            color: theme.textTheme.bodySmall?.color?.withAlpha((0.4 * 255).round()),
-                          ),
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                        maxLines: null,
-                        keyboardType: TextInputType.multiline,
-                        textCapitalization: TextCapitalization.sentences,
                       ),
-                    ],
-                  ),
+
+                    // Content field
+                    TextField(
+                      controller: _contentController,
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                        color: theme.textTheme.bodyLarge?.color,
+                        height: 1.7,
+                        letterSpacing: 0.1,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Start writing...',
+                        hintStyle: GoogleFonts.inter(
+                          fontSize: 16,
+                          color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.3),
+                        ),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      maxLines: null,
+                      keyboardType: TextInputType.multiline,
+                      textCapitalization: TextCapitalization.sentences,
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildToolbar(ThemeData theme) {
+  Widget _buildToolbar(ThemeData theme, bool isLight) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
       decoration: BoxDecoration(
         color: theme.scaffoldBackgroundColor,
         border: Border(
           bottom: BorderSide(
-            color: theme.dividerColor.withAlpha((0.1 * 255).round()),
+            color: theme.dividerColor.withValues(alpha: 0.15),
+            width: 0.5,
           ),
         ),
       ),
@@ -318,131 +347,159 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
             onPressed: () async {
               final ctx = context;
               await _saveAndExit();
-              if (ctx.mounted) {
-                ctx.go('/home');
-              }
+              if (ctx.mounted) ctx.go('/home');
             },
+            splashRadius: 22,
             icon: Icon(
-              Icons.arrow_back_ios_new_rounded,
-              size: 20,
+              Icons.arrow_back_rounded,
+              size: 22,
               color: theme.textTheme.titleMedium?.color,
             ),
           ),
           const Spacer(),
 
-          // Auto-save indicator
-          if (_hasUnsavedChanges)
-            Container(
-              width: 6,
-              height: 6,
+          // Unsaved changes indicator
+          AnimatedOpacity(
+            opacity: _hasUnsavedChanges ? 1.0 : 0.0,
+            duration: const Duration(milliseconds: 200),
+            child: Container(
+              width: 7, height: 7,
               margin: const EdgeInsets.only(right: 8),
-              decoration: const BoxDecoration(
-                color: Color(0xFFFFC107),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary,
                 shape: BoxShape.circle,
               ),
             ),
+          ),
 
-          // Actions
-          IconButton(
-            onPressed: () {
+          // Word count
+          if (_contentController.text.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Text(
+                '${_contentController.text.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length} words',
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.35),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+
+          // Pin toggle
+          _ToolbarAction(
+            icon: _currentNote?.isPinned == true ? Icons.push_pin_rounded : Icons.push_pin_outlined,
+            isActive: _currentNote?.isPinned == true,
+            activeColor: theme.colorScheme.primary,
+            inactiveColor: theme.textTheme.bodySmall?.color ?? Colors.grey,
+            onTap: () {
               if (_currentNote != null) {
                 ref.read(notesProvider.notifier).togglePin(_currentNote!);
                 setState(() {
-                  _currentNote = _currentNote!.copyWith(
-                    isPinned: !_currentNote!.isPinned,
-                  );
+                  _currentNote = _currentNote!.copyWith(isPinned: !_currentNote!.isPinned);
                 });
               }
             },
-            icon: Icon(
-              _currentNote?.isPinned == true
-                  ? Icons.push_pin_rounded
-                  : Icons.push_pin_outlined,
-              size: 22,
-              color: _currentNote?.isPinned == true
-                  ? theme.colorScheme.primary
-                  : theme.textTheme.bodySmall?.color,
-            ),
           ),
-          IconButton(
-            onPressed: () {
+
+          // Favorite toggle
+          _ToolbarAction(
+            icon: _currentNote?.isFavorite == true ? Icons.star_rounded : Icons.star_outline_rounded,
+            isActive: _currentNote?.isFavorite == true,
+            activeColor: const Color(0xFFFFB300),
+            inactiveColor: theme.textTheme.bodySmall?.color ?? Colors.grey,
+            onTap: () {
               if (_currentNote != null) {
                 ref.read(notesProvider.notifier).toggleFavorite(_currentNote!);
                 setState(() {
-                  _currentNote = _currentNote!.copyWith(
-                    isFavorite: !_currentNote!.isFavorite,
-                  );
+                  _currentNote = _currentNote!.copyWith(isFavorite: !_currentNote!.isFavorite);
                 });
               }
             },
-            icon: Icon(
-              _currentNote?.isFavorite == true
-                  ? Icons.favorite_rounded
-                  : Icons.favorite_border_rounded,
-              size: 22,
-              color: _currentNote?.isFavorite == true
-                  ? const Color(0xFFEF4444)
-                  : theme.textTheme.bodySmall?.color,
-            ),
           ),
+
+          // More menu
           PopupMenuButton<_EditorMenuAction>(
             icon: Icon(
-              Icons.more_vert_rounded,
-              color: theme.textTheme.bodySmall?.color,
+              Icons.more_horiz_rounded,
+              color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.6),
             ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            color: theme.colorScheme.surface,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            color: isLight
+                ? theme.cardTheme.color
+                : theme.colorScheme.surface,
+            elevation: isLight ? 4 : 8,
             onSelected: _onMenuSelected,
             itemBuilder: (context) => [
-              PopupMenuItem<_EditorMenuAction>(
-                value: _EditorMenuAction.share,
-                child: Row(
-                  children: [
-                    Icon(Icons.share_rounded, size: 20, color: theme.textTheme.titleMedium?.color),
-                    const SizedBox(width: 12),
-                    Text('Share', style: GoogleFonts.inter(fontSize: 14)),
-                  ],
-                ),
+              _buildMenuItem(
+                Icons.share_outlined, 'Share',
+                theme.textTheme.titleMedium?.color ?? Colors.white,
+                _EditorMenuAction.share,
               ),
-              PopupMenuItem<_EditorMenuAction>(
-                value: _EditorMenuAction.copyText,
-                child: Row(
-                  children: [
-                    Icon(Icons.copy_rounded, size: 20, color: theme.textTheme.titleMedium?.color),
-                    const SizedBox(width: 12),
-                    Text('Copy text', style: GoogleFonts.inter(fontSize: 14)),
-                  ],
-                ),
+              _buildMenuItem(
+                Icons.copy_rounded, 'Copy text',
+                theme.textTheme.titleMedium?.color ?? Colors.white,
+                _EditorMenuAction.copyText,
               ),
-              PopupMenuItem<_EditorMenuAction>(
-                value: _EditorMenuAction.versionHistory,
-                child: Row(
-                  children: [
-                    Icon(Icons.history_rounded, size: 20, color: theme.textTheme.titleMedium?.color),
-                    const SizedBox(width: 12),
-                    Text('Version history', style: GoogleFonts.inter(fontSize: 14)),
-                  ],
-                ),
+              _buildMenuItem(
+                Icons.history_rounded, 'Version history',
+                theme.textTheme.titleMedium?.color ?? Colors.white,
+                _EditorMenuAction.versionHistory,
               ),
               const PopupMenuDivider(),
-              PopupMenuItem<_EditorMenuAction>(
-                value: _EditorMenuAction.moveToTrash,
-                child: Row(
-                  children: [
-                    Icon(Icons.delete_outline_rounded, size: 20, color: theme.colorScheme.error),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Move to trash',
-                      style: GoogleFonts.inter(fontSize: 14, color: theme.colorScheme.error),
-                    ),
-                  ],
-                ),
+              _buildMenuItem(
+                Icons.delete_outline_rounded, 'Move to trash',
+                theme.colorScheme.error,
+                _EditorMenuAction.moveToTrash,
               ),
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  PopupMenuItem<_EditorMenuAction> _buildMenuItem(
+    IconData icon, String label, Color color, _EditorMenuAction action,
+  ) {
+    return PopupMenuItem<_EditorMenuAction>(
+      value: action,
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: color),
+          const SizedBox(width: 12),
+          Text(label, style: GoogleFonts.inter(fontSize: 14, color: color)),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Toolbar Action Button ─────────────────────────
+class _ToolbarAction extends StatelessWidget {
+  final IconData icon;
+  final bool isActive;
+  final Color activeColor;
+  final Color inactiveColor;
+  final VoidCallback onTap;
+
+  const _ToolbarAction({
+    required this.icon,
+    required this.isActive,
+    required this.activeColor,
+    required this.inactiveColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      onPressed: onTap,
+      splashRadius: 20,
+      icon: Icon(
+        icon,
+        size: 22,
+        color: isActive ? activeColor : inactiveColor.withValues(alpha: 0.5),
       ),
     );
   }
