@@ -123,14 +123,25 @@ final notesProvider =
   return NotesNotifier();
 });
 
-/// Provider for search results
+/// Provider for search results with debouncing
 final searchQueryProvider = StateProvider<String>((ref) => '');
 
-final searchResultsProvider = FutureProvider<List<Note>>((ref) async {
+/// Debounced search query — waits 300ms after typing stops before firing
+final _debouncedSearchQueryProvider = FutureProvider<String>((ref) async {
   final query = ref.watch(searchQueryProvider);
-  if (query.isEmpty) return [];
+  if (query.isEmpty) return '';
+  // Debounce: wait 300ms before issuing query
+  await Future.delayed(const Duration(milliseconds: 300));
+  // If query changed during the delay, this provider will be cancelled
+  // and re-created by Riverpod automatically
+  return query;
+});
+
+final searchResultsProvider = FutureProvider<List<Note>>((ref) async {
+  final query = ref.watch(_debouncedSearchQueryProvider).valueOrNull ?? '';
+  if (query.trim().isEmpty) return [];
   final dao = NoteDao();
-  return dao.searchNotes(query);
+  return dao.searchNotes(query.trim());
 });
 
 /// Provider for deleted notes
