@@ -16,36 +16,61 @@ class NoteCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final preview = note.content.length > 120
-        ? '${note.content.substring(0, 120)}...'
-        : note.content;
+    final isLight = theme.brightness == Brightness.light;
+    final preview = note.content.replaceAll('\n', ' ').trim();
+    final truncated = preview.length > 100 ? '${preview.substring(0, 100)}…' : preview;
     final timeAgo = _formatTimeAgo(note.updatedAt);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 10),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(16),
+          splashColor: theme.colorScheme.primary.withValues(alpha: 0.06),
+          highlightColor: theme.colorScheme.primary.withValues(alpha: 0.03),
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: note.color != null
-                  ? Color(int.parse(note.color!.replaceFirst('#', '0xFF'))).withValues(alpha: 0.08)
+                  ? Color(int.parse(note.color!.replaceFirst('#', '0xFF'))).withValues(alpha: 0.06)
                   : theme.cardTheme.color,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: theme.dividerColor.withValues(alpha: 0.2),
+                color: theme.dividerColor.withValues(alpha: isLight ? 0.35 : 0.2),
                 width: 0.5,
               ),
+              boxShadow: isLight
+                  ? [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
+                  : null,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Title row
+                // Title row with badges
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
+                    // Pin indicator
+                    if (note.isPinned) ...[
+                      Container(
+                        width: 4,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                    ],
+                    // Title
                     Expanded(
                       child: Text(
                         note.title.isEmpty ? 'Untitled' : note.title,
@@ -53,63 +78,70 @@ class NoteCard extends StatelessWidget {
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: note.title.isEmpty
-                              ? theme.textTheme.bodySmall?.color
+                              ? theme.textTheme.bodySmall?.color?.withValues(alpha: 0.5)
                               : theme.textTheme.titleLarge?.color,
+                          letterSpacing: -0.2,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    if (note.isFavorite)
-                      Padding(
-                        padding: const EdgeInsets.only(left: 8),
-                        child: Icon(
-                          Icons.favorite_rounded,
-                          size: 16,
-                          color: const Color(0xFFEF4444),
-                        ),
+                    if (note.isFavorite) ...[
+                      const SizedBox(width: 8),
+                      Icon(
+                        Icons.star_rounded,
+                        size: 18,
+                        color: const Color(0xFFFFB300),
                       ),
+                    ],
                   ],
                 ),
 
                 // Preview
-                if (preview.isNotEmpty) ...[
-                  const SizedBox(height: 6),
+                if (truncated.isNotEmpty) ...[
+                  const SizedBox(height: 8),
                   Text(
-                    preview,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      height: 1.4,
+                    truncated,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w400,
+                      color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                      height: 1.5,
+                      letterSpacing: 0.1,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
 
-                // Footer
-                const SizedBox(height: 10),
+                // Footer: time + folder
+                const SizedBox(height: 12),
                 Row(
                   children: [
-                    Icon(
-                      Icons.access_time_rounded,
-                      size: 12,
-                      color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.6),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      timeAgo,
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w400,
-                        color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.6),
+                    // Time
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.06),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        timeAgo,
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.55),
+                          letterSpacing: 0.2,
+                        ),
                       ),
                     ),
                     const Spacer(),
-                    if (note.isPinned)
-                      Icon(
-                        Icons.push_pin_rounded,
-                        size: 13,
-                        color: theme.colorScheme.primary.withValues(alpha: 0.7),
-                      ),
+                    // Chevron hint
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      size: 18,
+                      color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.2),
+                    ),
                   ],
                 ),
               ],

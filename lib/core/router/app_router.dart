@@ -35,37 +35,70 @@ class AppShell extends StatelessWidget {
       body: child,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
+          color: theme.bottomNavigationBarTheme.backgroundColor,
           border: Border(
             top: BorderSide(
-              color: theme.dividerColor.withValues(alpha: 0.3),
+              color: theme.dividerColor.withValues(alpha: 0.25),
               width: 0.5,
             ),
           ),
+          boxShadow: theme.brightness == Brightness.light
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 8,
+                    offset: const Offset(0, -2),
+                  ),
+                ]
+              : null,
         ),
-        child: BottomNavigationBar(
-          currentIndex: currentIndex,
-          onTap: (index) {
-            if (index != currentIndex) {
-              context.go(_tabs[index]);
-            }
-          },
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home_rounded),
-              label: 'Home',
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 4, bottom: 2),
+            child: BottomNavigationBar(
+              currentIndex: currentIndex,
+              onTap: (index) {
+                if (index != currentIndex) {
+                  context.go(_tabs[index]);
+                }
+              },
+              items: const [
+                BottomNavigationBarItem(
+                  icon: Padding(
+                    padding: EdgeInsets.only(bottom: 3),
+                    child: Icon(Icons.home_outlined, size: 24),
+                  ),
+                  activeIcon: Padding(
+                    padding: EdgeInsets.only(bottom: 3),
+                    child: Icon(Icons.home_rounded, size: 24),
+                  ),
+                  label: 'Home',
+                ),
+                BottomNavigationBarItem(
+                  icon: Padding(
+                    padding: EdgeInsets.only(bottom: 3),
+                    child: Icon(Icons.folder_outlined, size: 24),
+                  ),
+                  activeIcon: Padding(
+                    padding: EdgeInsets.only(bottom: 3),
+                    child: Icon(Icons.folder_rounded, size: 24),
+                  ),
+                  label: 'Folders',
+                ),
+                BottomNavigationBarItem(
+                  icon: Padding(
+                    padding: EdgeInsets.only(bottom: 3),
+                    child: Icon(Icons.settings_outlined, size: 24),
+                  ),
+                  activeIcon: Padding(
+                    padding: EdgeInsets.only(bottom: 3),
+                    child: Icon(Icons.settings_rounded, size: 24),
+                  ),
+                  label: 'Settings',
+                ),
+              ],
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.folder_outlined),
-              activeIcon: Icon(Icons.folder_rounded),
-              label: 'Folders',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.settings_outlined),
-              activeIcon: Icon(Icons.settings_rounded),
-              label: 'Settings',
-            ),
-          ],
+          ),
         ),
       ),
     );

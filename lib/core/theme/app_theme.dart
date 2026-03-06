@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// App theme system supporting Light, Dark, and AMOLED modes
+/// App theme system supporting Light and AMOLED modes
+/// with high-contrast, premium color palettes
 class AppTheme {
   AppTheme._();
 
@@ -10,27 +11,27 @@ class AppTheme {
   // ══════════════════════════════════════════════════
 
   // Brand colors
-  static const Color _primaryColor = Color(0xFFFFC107); // Amber/Yellow from logo
-  static const Color _primaryDark = Color(0xFFFFB300);
+  static const Color _primaryColor = Color(0xFFFFC107); // Amber/Yellow
+  static const Color _primaryDark = Color(0xFFE5A800);  // Deeper amber for light theme
   static const Color _accentColor = Color(0xFF5C6BC0);
 
-  // Light theme colors
-  static const Color _lightBackground = Color(0xFFF8F9FA);
-  static const Color _lightSurface = Color(0xFFFFFFFF);
-  static const Color _lightCard = Color(0xFFFFFFFF);
-  static const Color _lightText = Color(0xFF1A1A2E);
-  static const Color _lightTextSecondary = Color(0xFF6B7280);
-  static const Color _lightDivider = Color(0xFFE5E7EB);
-  static const Color _lightNavBar = Color(0xFFFFFFFF);
+  // ── Light theme: off-white color palette ───────────
+  static const Color _lightBackground = Color(0xFFFAF9F6);   // Off-white / ivory
+  static const Color _lightSurface = Color(0xFFFFFEFB);      // Warm white surface
+  static const Color _lightCard = Color(0xFFFFFFFF);          // Pure white cards
+  static const Color _lightText = Color(0xFF1C1C1E);          // iOS-style near-black
+  static const Color _lightTextSecondary = Color(0xFF636366); // Medium gray
+  static const Color _lightDivider = Color(0xFFE8E6E1);      // Soft warm divider
+  static const Color _lightNavBar = Color(0xFFFAF9F6);       // Matches background
 
-  // AMOLED theme colors
-  static const Color _amoledBackground = Color(0xFF000000);
-  static const Color _amoledSurface = Color(0xFF0A0A0A);
-  static const Color _amoledCard = Color(0xFF111111);
-  static const Color _amoledText = Color(0xFFFFFFFF);
-  static const Color _amoledTextSecondary = Color(0xFFAAAAAA);
-  static const Color _amoledDivider = Color(0xFF222222);
-  static const Color _amoledNavBar = Color(0xFF050505);
+  // ── AMOLED theme: pure black with high contrast ───
+  static const Color _amoledBackground = Color(0xFF000000);   // Pure black
+  static const Color _amoledSurface = Color(0xFF0D0D0D);     // Near-black surface
+  static const Color _amoledCard = Color(0xFF141414);         // Slightly lifted cards
+  static const Color _amoledText = Color(0xFFF5F5F5);        // Soft white (less harsh)
+  static const Color _amoledTextSecondary = Color(0xFF8C8C8C); // Mid-gray for contrast
+  static const Color _amoledDivider = Color(0xFF262626);      // Visible dark divider
+  static const Color _amoledNavBar = Color(0xFF080808);       // Near-black nav bar
 
   // Note tag/highlight colors
   static const List<Color> noteColors = [
@@ -143,13 +144,13 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.light,
       colorScheme: ColorScheme.light(
-        primary: _primaryColor,
+        primary: _primaryDark,
         onPrimary: _lightText,
         secondary: _accentColor,
         onSecondary: Colors.white,
         surface: _lightSurface,
         onSurface: _lightText,
-        error: const Color(0xFFEF4444),
+        error: const Color(0xFFD32F2F),
       ),
       scaffoldBackgroundColor: _lightBackground,
       textTheme: _buildTextTheme(_lightText, _lightTextSecondary),
@@ -158,7 +159,7 @@ class AppTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: _lightDivider.withValues(alpha: 0.5)),
+          side: BorderSide(color: _lightDivider.withValues(alpha: 0.6)),
         ),
       ),
       appBarTheme: AppBarTheme(
@@ -178,7 +179,7 @@ class AppTheme {
         selectedItemColor: _primaryDark,
         unselectedItemColor: _lightTextSecondary,
         type: BottomNavigationBarType.fixed,
-        elevation: 8,
+        elevation: 0,
         selectedLabelStyle: GoogleFonts.inter(
           fontSize: 12,
           fontWeight: FontWeight.w600,
@@ -189,9 +190,9 @@ class AppTheme {
         ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: _primaryColor,
-        foregroundColor: _lightText,
-        elevation: 4,
+        backgroundColor: _primaryDark,
+        foregroundColor: Colors.white,
+        elevation: 3,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
@@ -209,22 +210,31 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: _primaryColor, width: 2),
+          borderSide: BorderSide(color: _primaryDark, width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
       dividerColor: _lightDivider,
       dividerTheme: DividerThemeData(color: _lightDivider, thickness: 0.5),
       chipTheme: ChipThemeData(
-        backgroundColor: _lightBackground,
-        selectedColor: _primaryColor.withValues(alpha: 0.2),
+        backgroundColor: _lightSurface,
+        selectedColor: _primaryDark.withValues(alpha: 0.2),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
       ),
       snackBarTheme: SnackBarThemeData(
+        backgroundColor: const Color(0xFF2D2D2D),
+        contentTextStyle: GoogleFonts.inter(
+          color: Colors.white,
+          fontSize: 14,
+        ),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      iconTheme: const IconThemeData(
+        color: _lightText,
+        size: 24,
       ),
     );
   }
@@ -235,12 +245,12 @@ class AppTheme {
       brightness: Brightness.dark,
       colorScheme: ColorScheme.dark(
         primary: _primaryColor,
-        onPrimary: _amoledText,
+        onPrimary: Colors.black,
         secondary: _accentColor,
         onSecondary: Colors.white,
         surface: _amoledSurface,
         onSurface: _amoledText,
-        error: const Color(0xFFEF4444),
+        error: const Color(0xFFFF6B6B),
       ),
       scaffoldBackgroundColor: _amoledBackground,
       textTheme: _buildTextTheme(_amoledText, _amoledTextSecondary),
@@ -249,7 +259,7 @@ class AppTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: _amoledDivider.withValues(alpha: 0.3)),
+          side: BorderSide(color: _amoledDivider.withValues(alpha: 0.5)),
         ),
       ),
       appBarTheme: AppBarTheme(
@@ -314,8 +324,17 @@ class AppTheme {
         ),
       ),
       snackBarTheme: SnackBarThemeData(
+        backgroundColor: const Color(0xFF1A1A1A),
+        contentTextStyle: GoogleFonts.inter(
+          color: _amoledText,
+          fontSize: 14,
+        ),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      iconTheme: const IconThemeData(
+        color: _amoledText,
+        size: 24,
       ),
     );
   }
