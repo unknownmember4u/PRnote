@@ -44,27 +44,10 @@ class HomeScreen extends ConsumerWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      RichText(
-                        text: TextSpan(
-                          children: [
-                            TextSpan(
-                              text: 'PR',
-                              style: GoogleFonts.inter(
-                                fontSize: 28,
-                                fontWeight: FontWeight.w800,
-                                color: theme.colorScheme.primary,
-                              ),
-                            ),
-                            TextSpan(
-                              text: 'note',
-                              style: GoogleFonts.inter(
-                                fontSize: 28,
-                                fontWeight: FontWeight.w300,
-                                color: theme.textTheme.displayLarge?.color,
-                              ),
-                            ),
-                          ],
-                        ),
+                      Image.asset(
+                        'assets/images/logo_full.png',
+                        height: 38,
+                        fit: BoxFit.contain,
                       ),
                       // Date badge
                       Container(

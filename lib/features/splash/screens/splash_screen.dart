@@ -86,7 +86,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     final bgColor = theme.scaffoldBackgroundColor;
     final subtitleColor = isLight ? Colors.black38 : Colors.white38;
-    final noteTextColor = isLight ? Colors.black54 : Colors.white70;
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -101,55 +100,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Logo
-                    Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(28),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFFFFC107).withValues(alpha: 0.3),
-                            blurRadius: 30,
-                            spreadRadius: 5,
-                          ),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(28),
-                        child: Image.asset(
-                          'assets/images/splash_logo.png',
-                          fit: BoxFit.cover,
-                        ),
-                      ),
+                    // Logo Image
+                    Image.asset(
+                      'assets/images/logo_full.png',
+                      width: MediaQuery.of(context).size.width * 0.65,
+                      fit: BoxFit.contain,
                     ),
                     const SizedBox(height: 24),
-                    // App name
-                    RichText(
-                      text: TextSpan(
-                        children: [
-                          TextSpan(
-                            text: 'PR',
-                            style: GoogleFonts.inter(
-                              fontSize: 36,
-                              fontWeight: FontWeight.w800,
-                              color: const Color(0xFFFFC107),
-                              letterSpacing: -1,
-                            ),
-                          ),
-                          TextSpan(
-                            text: 'note',
-                            style: GoogleFonts.inter(
-                              fontSize: 36,
-                              fontWeight: FontWeight.w300,
-                              color: noteTextColor,
-                              letterSpacing: -1,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
                     Text(
                       'Your notes, your way',
                       style: GoogleFonts.inter(
