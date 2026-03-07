@@ -877,9 +877,119 @@ class _FontSettingsBottomSheet extends ConsumerWidget {
               },
             ),
           ),
+          const SizedBox(height: 24),
+
+          // Line Height slider
+          Text(
+            'Line Spacing',
+            style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: theme.textTheme.bodySmall?.color),
+          ),
+          Row(
+            children: [
+              Icon(Icons.format_line_spacing_rounded, size: 18, color: theme.textTheme.bodySmall?.color),
+              Expanded(
+                child: SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    activeTrackColor: theme.colorScheme.primary,
+                    inactiveTrackColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+                    thumbColor: theme.colorScheme.primary,
+                    overlayColor: theme.colorScheme.primary.withValues(alpha: 0.2),
+                    trackHeight: 4,
+                  ),
+                  child: Slider(
+                    value: settings.lineHeight,
+                    min: 1.0,
+                    max: 3.0,
+                    divisions: 10,
+                    onChanged: (val) {
+                      ref.read(editorSettingsProvider.notifier).updateLineHeight(val);
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 16),
+          // Text Color selection
+          Text(
+            'Text Color',
+            style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: theme.textTheme.bodySmall?.color),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 48,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              children: [
+                // Default theme color option
+                _ColorOption(
+                  color: null,
+                  themeColor: theme.textTheme.bodyLarge?.color,
+                  isSelected: settings.textColor == null,
+                  onTap: () => ref.read(editorSettingsProvider.notifier).updateTextColor(null),
+                ),
+                _ColorOption(color: const Color(0xFFEF5350), isSelected: settings.textColor == const Color(0xFFEF5350), onTap: () => ref.read(editorSettingsProvider.notifier).updateTextColor(const Color(0xFFEF5350))),
+                _ColorOption(color: const Color(0xFF42A5F5), isSelected: settings.textColor == const Color(0xFF42A5F5), onTap: () => ref.read(editorSettingsProvider.notifier).updateTextColor(const Color(0xFF42A5F5))),
+                _ColorOption(color: const Color(0xFF66BB6A), isSelected: settings.textColor == const Color(0xFF66BB6A), onTap: () => ref.read(editorSettingsProvider.notifier).updateTextColor(const Color(0xFF66BB6A))),
+                _ColorOption(color: const Color(0xFFFFCA28), isSelected: settings.textColor == const Color(0xFFFFCA28), onTap: () => ref.read(editorSettingsProvider.notifier).updateTextColor(const Color(0xFFFFCA28))),
+                _ColorOption(color: const Color(0xFFAB47BC), isSelected: settings.textColor == const Color(0xFFAB47BC), onTap: () => ref.read(editorSettingsProvider.notifier).updateTextColor(const Color(0xFFAB47BC))),
+                _ColorOption(color: const Color(0xFF8D6E63), isSelected: settings.textColor == const Color(0xFF8D6E63), onTap: () => ref.read(editorSettingsProvider.notifier).updateTextColor(const Color(0xFF8D6E63))),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
+// ─── Color Option Widget ────────────────────────────────
+class _ColorOption extends StatelessWidget {
+  final Color? color;
+  final Color? themeColor;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _ColorOption({
+    this.color,
+    this.themeColor,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final displayColor = color ?? themeColor ?? Colors.black;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(right: 12),
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          color: displayColor,
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: isSelected ? Theme.of(context).colorScheme.primary : Colors.transparent,
+            width: isSelected ? 3 : 0,
+            strokeAlign: BorderSide.strokeAlignOutside,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ]
+        ),
+        child: isSelected
+          ? Icon(Icons.check_rounded, color: displayColor.computeLuminance() > 0.5 ? Colors.black : Colors.white, size: 24)
+          : color == null 
+            ? Icon(Icons.format_color_text_rounded, color: displayColor.computeLuminance() > 0.5 ? Colors.black : Colors.white, size: 20)
+            : null,
+      ),
+    );
+  }
+}

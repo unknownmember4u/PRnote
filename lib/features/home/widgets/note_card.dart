@@ -19,13 +19,10 @@ class NoteCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isLight = theme.brightness == Brightness.light;
-    final preview = note.content.replaceAll('\n', ' ').trim();
-    final truncated = preview.length > 100 ? '${preview.substring(0, 100)}…' : preview;
+    final preview = note.content.trim();
     final timeAgo = _formatTimeAgo(note.updatedAt);
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Material(
+    return Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
@@ -101,10 +98,10 @@ class NoteCard extends StatelessWidget {
                 ),
 
                 // Preview
-                if (truncated.isNotEmpty) ...[
+                if (preview.isNotEmpty) ...[
                   const SizedBox(height: 8),
                   Text(
-                    truncated,
+                    preview,
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       fontWeight: FontWeight.w400,
@@ -112,7 +109,7 @@ class NoteCard extends StatelessWidget {
                       height: 1.5,
                       letterSpacing: 0.1,
                     ),
-                    maxLines: 2,
+                    maxLines: 6,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
@@ -151,7 +148,6 @@ class NoteCard extends StatelessWidget {
             ),
           ),
         ),
-      ),
     );
   }
 

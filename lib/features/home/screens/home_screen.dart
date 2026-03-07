@@ -11,6 +11,7 @@ import 'package:prnote/core/widgets/prnote_logo.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:prnote/models/note.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -310,37 +311,59 @@ class HomeScreen extends ConsumerWidget {
 
               return SliverPadding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate([
+                sliver: SliverMainAxisGroup(
+                  slivers: [
                     // Pinned section
                     if (pinnedNotes.isNotEmpty) ...[
-                      _SectionHeader(
-                        icon: Icons.push_pin_rounded,
-                        label: 'PINNED',
-                        color: theme.colorScheme.primary,
+                      SliverToBoxAdapter(
+                        child: _SectionHeader(
+                          icon: Icons.push_pin_rounded,
+                          label: 'PINNED',
+                          color: theme.colorScheme.primary,
+                        ),
                       ),
-                      ...pinnedNotes.map((note) => NoteCard(
-                        note: note,
-                        onTap: () => context.push('/editor/${note.id}'),
-                        onLongPress: () => _showNoteOptions(context, ref, note),
-                      )),
-                      const SizedBox(height: 20),
+                      SliverAlignedGrid.count(
+                        crossAxisCount: size.width > 600 ? 3 : (size.width > 400 ? 2 : 1),
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
+                        itemCount: pinnedNotes.length,
+                        itemBuilder: (context, index) {
+                          final note = pinnedNotes[index];
+                          return NoteCard(
+                            note: note,
+                            onTap: () => context.push('/editor/${note.id}'),
+                            onLongPress: () => _showNoteOptions(context, ref, note),
+                          );
+                        },
+                      ),
+                      const SliverToBoxAdapter(child: SizedBox(height: 24)),
                     ],
 
                     // Recent section
                     if (unpinnedNotes.isNotEmpty) ...[
-                      _SectionHeader(
-                        icon: Icons.schedule_rounded,
-                        label: 'RECENT',
-                        color: theme.textTheme.bodySmall?.color ?? Colors.grey,
+                      SliverToBoxAdapter(
+                        child: _SectionHeader(
+                          icon: Icons.schedule_rounded,
+                          label: 'RECENT',
+                          color: theme.textTheme.bodySmall?.color ?? Colors.grey,
+                        ),
                       ),
-                      ...unpinnedNotes.map((note) => NoteCard(
-                        note: note,
-                        onTap: () => context.push('/editor/${note.id}'),
-                        onLongPress: () => _showNoteOptions(context, ref, note),
-                      )),
+                      SliverAlignedGrid.count(
+                        crossAxisCount: size.width > 600 ? 3 : 2,
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
+                        itemCount: unpinnedNotes.length,
+                        itemBuilder: (context, index) {
+                          final note = unpinnedNotes[index];
+                          return NoteCard(
+                            note: note,
+                            onTap: () => context.push('/editor/${note.id}'),
+                            onLongPress: () => _showNoteOptions(context, ref, note),
+                          );
+                        },
+                      ),
                     ],
-                  ]),
+                  ],
                 ),
               );
             },
