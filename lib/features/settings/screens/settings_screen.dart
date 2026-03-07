@@ -300,7 +300,7 @@ class SettingsScreen extends ConsumerWidget {
 
   void _showAutoSaveDialog(BuildContext context, WidgetRef ref, int currentVal) {
     final options = [
-      {'label': 'Off (Manual)', 'value': 0},
+      {'label': 'Off (Disable Auto-save)', 'value': 0},
       {'label': '3 seconds', 'value': 3},
       {'label': '5 seconds', 'value': 5},
       {'label': '10 seconds', 'value': 10},

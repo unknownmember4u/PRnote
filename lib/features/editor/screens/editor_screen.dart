@@ -391,6 +391,18 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
       },
       child: Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
+        floatingActionButton: AnimatedScale(
+          scale: _hasUnsavedChanges ? 1.0 : 0.0,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutBack,
+          child: FloatingActionButton.extended(
+            onPressed: _manualSave,
+            backgroundColor: const Color(0xFF26A69A),
+            foregroundColor: Colors.white,
+            icon: const Icon(Icons.save_rounded),
+            label: Text('Save Note', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+          ),
+        ),
         body: Column(
           children: [
             SizedBox(height: topPadding),
@@ -548,41 +560,24 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
               ),
             ),
 
-          // Manual Save button (Always visible, state driven)
-          InkWell(
-            onTap: _manualSave,
-            borderRadius: BorderRadius.circular(12),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          // Manual Save indicator explicitly removed from here to use FAB
+          AnimatedOpacity(
+            opacity: _hasUnsavedChanges ? 1.0 : 0.0,
+            duration: const Duration(milliseconds: 200),
+            child: Container(
+              margin: const EdgeInsets.only(right: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: _hasUnsavedChanges 
-                  ? const Color(0xFF26A69A).withValues(alpha: 0.15)
-                  : theme.textTheme.bodySmall?.color?.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(12),
+                color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    _hasUnsavedChanges ? Icons.save_rounded : Icons.check_circle_rounded,
-                    size: 16,
-                    color: _hasUnsavedChanges 
-                      ? const Color(0xFF26A69A)
-                      : theme.textTheme.bodySmall?.color?.withValues(alpha: 0.5),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    _hasUnsavedChanges ? 'Save' : 'Saved',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: _hasUnsavedChanges 
-                        ? const Color(0xFF26A69A)
-                        : theme.textTheme.bodySmall?.color?.withValues(alpha: 0.5),
-                    ),
-                  ),
-                ],
+              child: Text(
+                'Unsaved',
+                style: GoogleFonts.inter(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.primary,
+                ),
               ),
             ),
           ),
