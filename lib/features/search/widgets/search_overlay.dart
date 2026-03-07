@@ -407,7 +407,7 @@ class _SearchResultCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final snippet = _getSnippet(note.content, query, 80);
+    final snippet = _getSnippet(note.plainContent, query, 80);
     final hasContent = snippet.isNotEmpty;
 
     return Padding(

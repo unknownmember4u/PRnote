@@ -60,7 +60,7 @@ class HomeScreen extends ConsumerWidget {
               color: theme.textTheme.titleMedium?.color ?? Colors.black,
               label: 'Copy Content',
               onTap: () async {
-                final txt = '${note.title}\n\n${note.content}'.trim();
+                final txt = '${note.title}\n\n${note.plainContent}'.trim();
                 await Clipboard.setData(ClipboardData(text: txt));
                 if (ctx.mounted) {
                   Navigator.pop(ctx);
@@ -76,7 +76,7 @@ class HomeScreen extends ConsumerWidget {
               label: 'Share',
               onTap: () {
                 Navigator.pop(ctx);
-                final txt = '${note.title}\n\n${note.content}'.trim();
+                final txt = '${note.title}\n\n${note.plainContent}'.trim();
                 if (txt.isNotEmpty) {
                   Share.share(txt);
                 }
@@ -88,7 +88,7 @@ class HomeScreen extends ConsumerWidget {
               label: 'Backup (Export)',
               onTap: () {
                 Navigator.pop(ctx);
-                final txt = '${note.title}\n\n${note.content}'.trim();
+                final txt = '${note.title}\n\n${note.plainContent}'.trim();
                 if (txt.isNotEmpty) {
                   // Sharing a file-like output or just standard share
                   Share.share(txt, subject: '${note.title} Backup');

@@ -19,7 +19,7 @@ class NoteCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isLight = theme.brightness == Brightness.light;
-    final preview = note.content.trim();
+    final preview = note.plainContent.trim();
     final timeAgo = _formatTimeAgo(note.updatedAt);
 
     return Material(

@@ -13,6 +13,11 @@ class Note extends Equatable {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  String get plainContent {
+    final idx = content.indexOf('\u200B\u200B\u200BCOLOR_SPANS:');
+    return idx != -1 ? content.substring(0, idx) : content;
+  }
+
   const Note({
     required this.id,
     required this.title,

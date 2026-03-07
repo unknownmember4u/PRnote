@@ -13,6 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:prnote/core/providers/editor_settings_provider.dart';
 import 'package:prnote/models/version.dart';
+import 'package:prnote/features/editor/widgets/colored_text_controller.dart';
 
 enum _EditorMenuAction { share, copyText, versionHistory, moveToTrash }
 
@@ -26,7 +27,7 @@ class EditorScreen extends ConsumerStatefulWidget {
 
 class _EditorScreenState extends ConsumerState<EditorScreen> {
   late TextEditingController _titleController;
-  late TextEditingController _contentController;
+  late ColoredTextController _contentController;
   Timer? _autoSaveTimer;
   Note? _currentNote;
   bool _isLoading = true;
@@ -38,7 +39,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   void initState() {
     super.initState();
     _titleController = TextEditingController();
-    _contentController = TextEditingController();
+    _contentController = ColoredTextController();
     _loadNote();
   }
 
@@ -64,7 +65,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
       setState(() {
         _currentNote = note;
         _titleController.text = note.title;
-        _contentController.text = note.content;
+        _contentController.deserializeContent(note.content);
         _isLoading = false;
       });
       final prefs = await SharedPreferences.getInstance();
@@ -95,7 +96,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
 
     final updated = _currentNote!.copyWith(
       title: _titleController.text,
-      content: _contentController.text,
+      content: _contentController.serializedContent,
       updatedAt: DateTime.now(),
     );
 
@@ -140,7 +141,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
     if (_hasUnsavedChanges && _currentNote != null) {
       final updated = _currentNote!.copyWith(
         title: _titleController.text,
-        content: _contentController.text,
+        content: _contentController.serializedContent,
       );
       await ref.read(notesProvider.notifier).updateNote(updated);
       await ref.read(notesProvider.notifier).saveVersion(updated);
@@ -408,7 +409,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
 
   void _restoreVersion(NoteVersion version) {
     _titleController.text = version.title;
-    _contentController.text = version.content;
+    _contentController.deserializeContent(version.content);
     _onTextChanged();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -655,7 +656,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (ctx) => _FontSettingsBottomSheet(),
+      builder: (ctx) => _FontSettingsBottomSheet(controller: _contentController),
     );
   }
 
@@ -925,6 +926,10 @@ class _ShareOption extends StatelessWidget {
 
 // ─── Font Settings Bottom Sheet ───────────────────────
 class _FontSettingsBottomSheet extends ConsumerWidget {
+  final ColoredTextController controller;
+
+  const _FontSettingsBottomSheet({required this.controller});
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
@@ -1084,15 +1089,15 @@ class _FontSettingsBottomSheet extends ConsumerWidget {
                 _ColorOption(
                   color: null,
                   themeColor: theme.textTheme.bodyLarge?.color,
-                  isSelected: settings.textColor == null,
-                  onTap: () => ref.read(editorSettingsProvider.notifier).updateTextColor(null),
+                  isSelected: false,
+                  onTap: () => controller.colorSelection(null),
                 ),
-                _ColorOption(color: const Color(0xFFEF5350), isSelected: settings.textColor == const Color(0xFFEF5350), onTap: () => ref.read(editorSettingsProvider.notifier).updateTextColor(const Color(0xFFEF5350))),
-                _ColorOption(color: const Color(0xFF42A5F5), isSelected: settings.textColor == const Color(0xFF42A5F5), onTap: () => ref.read(editorSettingsProvider.notifier).updateTextColor(const Color(0xFF42A5F5))),
-                _ColorOption(color: const Color(0xFF66BB6A), isSelected: settings.textColor == const Color(0xFF66BB6A), onTap: () => ref.read(editorSettingsProvider.notifier).updateTextColor(const Color(0xFF66BB6A))),
-                _ColorOption(color: const Color(0xFFFFCA28), isSelected: settings.textColor == const Color(0xFFFFCA28), onTap: () => ref.read(editorSettingsProvider.notifier).updateTextColor(const Color(0xFFFFCA28))),
-                _ColorOption(color: const Color(0xFFAB47BC), isSelected: settings.textColor == const Color(0xFFAB47BC), onTap: () => ref.read(editorSettingsProvider.notifier).updateTextColor(const Color(0xFFAB47BC))),
-                _ColorOption(color: const Color(0xFF8D6E63), isSelected: settings.textColor == const Color(0xFF8D6E63), onTap: () => ref.read(editorSettingsProvider.notifier).updateTextColor(const Color(0xFF8D6E63))),
+                _ColorOption(color: const Color(0xFFEF5350), isSelected: false, onTap: () => controller.colorSelection(const Color(0xFFEF5350))),
+                _ColorOption(color: const Color(0xFF42A5F5), isSelected: false, onTap: () => controller.colorSelection(const Color(0xFF42A5F5))),
+                _ColorOption(color: const Color(0xFF66BB6A), isSelected: false, onTap: () => controller.colorSelection(const Color(0xFF66BB6A))),
+                _ColorOption(color: const Color(0xFFFFCA28), isSelected: false, onTap: () => controller.colorSelection(const Color(0xFFFFCA28))),
+                _ColorOption(color: const Color(0xFFAB47BC), isSelected: false, onTap: () => controller.colorSelection(const Color(0xFFAB47BC))),
+                _ColorOption(color: const Color(0xFF8D6E63), isSelected: false, onTap: () => controller.colorSelection(const Color(0xFF8D6E63))),
               ],
             ),
           ),
