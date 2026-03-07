@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:prnote/core/providers/folders_provider.dart';
 import 'package:prnote/core/constants/app_constants.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -106,7 +107,9 @@ class FoldersScreen extends ConsumerWidget {
                   ],
                 ),
               ),
-              data: (folders) {
+              data: (allFolders) {
+                final folders = allFolders.where((f) => f.parentId == null).toList();
+                
                 if (folders.isEmpty) {
                   return Center(
                     child: Column(
@@ -166,7 +169,7 @@ class FoldersScreen extends ConsumerWidget {
                       child: InkWell(
                         borderRadius: BorderRadius.circular(18),
                         splashColor: folderColor.withValues(alpha: 0.08),
-                        onTap: () {},
+                        onTap: () => context.push('/folders/${folder.id}'),
                         onLongPress: isDefault
                             ? null
                             : () => _showFolderOptions(context, ref, folder.id, folder.name),
