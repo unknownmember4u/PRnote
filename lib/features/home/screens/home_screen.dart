@@ -13,8 +13,36 @@ import 'package:share_plus/share_plus.dart';
 import 'package:prnote/models/note.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  final Set<String> _selectedNotes = {};
+  bool _isSelectionMode = false;
+
+  void _toggleSelection(String id) {
+    setState(() {
+      if (_selectedNotes.contains(id)) {
+        _selectedNotes.remove(id);
+        if (_selectedNotes.isEmpty) {
+          _isSelectionMode = false;
+        }
+      } else {
+        _selectedNotes.add(id);
+      }
+    });
+  }
+
+  void _clearSelection() {
+    setState(() {
+      _selectedNotes.clear();
+      _isSelectionMode = false;
+    });
+  }
 
   String _greeting() {
     final hour = DateTime.now().hour;
@@ -122,15 +150,156 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
+  Widget _buildNoteItem(BuildContext context, ThemeData theme, bool isLight, Note note) {
+    final isSelected = _selectedNotes.contains(note.id);
+    return Stack(
+      children: [
+        NoteCard(
+          note: note,
+          onTap: () {
+            if (_isSelectionMode) {
+              _toggleSelection(note.id);
+            } else {
+              context.push('/editor/${note.id}');
+            }
+          },
+          onLongPress: () {
+            if (!_isSelectionMode) {
+              setState(() {
+                _isSelectionMode = true;
+                _toggleSelection(note.id);
+              });
+            } else {
+              _showNoteOptions(context, ref, note);
+            }
+          },
+        ),
+        if (_isSelectionMode)
+          Positioned.fill(
+            child: IgnorePointer(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  color: isSelected
+                      ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                      : Colors.transparent,
+                  border: Border.all(
+                    color: isSelected ? theme.colorScheme.primary : Colors.transparent,
+                    width: 2,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        if (isSelected)
+          Positioned(
+            top: 12,
+            right: 12,
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.check,
+                size: 14,
+                color: isLight ? Colors.white : Colors.black,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final notesAsync = ref.watch(notesProvider);
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
     final topPadding = MediaQuery.of(context).padding.top;
     final isLight = theme.brightness == Brightness.light;
 
+    Future<String> getSelectedText() async {
+      final notes = ref.read(notesProvider).valueOrNull ?? [];
+      final selected = notes.where((n) => _selectedNotes.contains(n.id)).toList();
+      return selected.map((n) => '${n.plainTitle}\n\n${n.plainContent}').join('\n\n---\n\n').trim();
+    }
+
     return Scaffold(
+      appBar: _isSelectionMode
+          ? AppBar(
+              leading: IconButton(
+                icon: const Icon(Icons.close_rounded),
+                onPressed: _clearSelection,
+              ),
+              title: Text(
+                '${_selectedNotes.length} Selected',
+                style: GoogleFonts.inter(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: theme.textTheme.displayLarge?.color,
+                ),
+              ),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.copy_rounded),
+                  tooltip: 'Copy',
+                  onPressed: () async {
+                    if (_selectedNotes.isEmpty) return;
+                    final text = await getSelectedText();
+                    if (text.isNotEmpty) {
+                      await Clipboard.setData(ClipboardData(text: text));
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Copied to clipboard', style: GoogleFonts.inter())),
+                        );
+                      }
+                    }
+                    _clearSelection();
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.share_rounded),
+                  tooltip: 'Share',
+                  onPressed: () async {
+                    if (_selectedNotes.isEmpty) return;
+                    final text = await getSelectedText();
+                    if (text.isNotEmpty) {
+                      // ignore: deprecated_member_use
+                      Share.share(text);
+                    }
+                    _clearSelection();
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.backup_rounded),
+                  tooltip: 'Backup (Export)',
+                  onPressed: () async {
+                    if (_selectedNotes.isEmpty) return;
+                    final text = await getSelectedText();
+                    if (text.isNotEmpty) {
+                      // ignore: deprecated_member_use
+                      Share.share(text, subject: 'PRnote Backup');
+                    }
+                    _clearSelection();
+                  },
+                ),
+                IconButton(
+                  icon: Icon(Icons.delete_outline_rounded, color: theme.colorScheme.error),
+                  tooltip: 'Move to trash',
+                  onPressed: () {
+                    for (final id in _selectedNotes) {
+                      ref.read(notesProvider.notifier).deleteNote(id);
+                    }
+                    _clearSelection();
+                  },
+                ),
+                const SizedBox(width: 8),
+              ],
+            )
+          : null,
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
@@ -330,11 +499,7 @@ class HomeScreen extends ConsumerWidget {
                         itemCount: pinnedNotes.length,
                         itemBuilder: (context, index) {
                           final note = pinnedNotes[index];
-                          return NoteCard(
-                            note: note,
-                            onTap: () => context.push('/editor/${note.id}'),
-                            onLongPress: () => _showNoteOptions(context, ref, note),
-                          );
+                          return _buildNoteItem(context, theme, isLight, note);
                         },
                       ),
                       const SliverToBoxAdapter(child: SizedBox(height: 24)),
@@ -356,11 +521,7 @@ class HomeScreen extends ConsumerWidget {
                         itemCount: unpinnedNotes.length,
                         itemBuilder: (context, index) {
                           final note = unpinnedNotes[index];
-                          return NoteCard(
-                            note: note,
-                            onTap: () => context.push('/editor/${note.id}'),
-                            onLongPress: () => _showNoteOptions(context, ref, note),
-                          );
+                          return _buildNoteItem(context, theme, isLight, note);
                         },
                       ),
                     ],
