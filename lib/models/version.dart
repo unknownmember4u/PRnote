@@ -17,6 +17,16 @@ class NoteVersion extends Equatable {
     required this.createdAt,
   });
 
+  String get plainContent {
+    final idx = content.indexOf('\u200B\u200B\u200BCOLOR_SPANS:');
+    return idx != -1 ? content.substring(0, idx) : content;
+  }
+
+  String get plainTitle {
+    final idx = title.indexOf('\u200B\u200B\u200BCOLOR_SPANS:');
+    return idx != -1 ? title.substring(0, idx) : title;
+  }
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,

@@ -492,13 +492,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
     );
   }
 
-  @override
-  void dispose() {
-    _autoSaveTimer?.cancel();
-    _titleController.dispose();
-    _contentController.dispose();
-    super.dispose();
-  }
+
 
   @override
   Widget build(BuildContext context) {
