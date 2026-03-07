@@ -5,9 +5,12 @@ import 'package:prnote/core/providers/notes_provider.dart';
 import 'package:prnote/features/home/widgets/note_card.dart';
 import 'package:prnote/features/home/widgets/empty_state.dart';
 import 'package:prnote/features/search/widgets/search_overlay.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:prnote/core/widgets/prnote_logo.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:prnote/models/note.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -17,6 +20,104 @@ class HomeScreen extends ConsumerWidget {
     if (hour < 12) return 'Good morning';
     if (hour < 17) return 'Good afternoon';
     return 'Good evening';
+  }
+
+  void _showNoteOptions(BuildContext context, WidgetRef ref, Note note) {
+    final theme = Theme.of(context);
+    final isLight = theme.brightness == Brightness.light;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: theme.scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle
+            Container(
+              width: 36, height: 4,
+              decoration: BoxDecoration(
+                color: theme.dividerColor,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              note.title.isNotEmpty ? note.title : 'Untitled Note',
+              style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 16),
+            
+            _buildOption(
+              icon: Icons.copy_rounded,
+              color: theme.textTheme.titleMedium?.color ?? Colors.black,
+              label: 'Copy Content',
+              onTap: () async {
+                final txt = '${note.title}\n\n${note.content}'.trim();
+                await Clipboard.setData(ClipboardData(text: txt));
+                if (ctx.mounted) {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Copied to clipboard', style: GoogleFonts.inter())),
+                  );
+                }
+              },
+            ),
+            _buildOption(
+              icon: Icons.share_rounded,
+              color: theme.textTheme.titleMedium?.color ?? Colors.black,
+              label: 'Share',
+              onTap: () {
+                Navigator.pop(ctx);
+                final txt = '${note.title}\n\n${note.content}'.trim();
+                if (txt.isNotEmpty) {
+                  Share.share(txt);
+                }
+              },
+            ),
+            _buildOption(
+              icon: Icons.backup_rounded,
+              color: theme.colorScheme.primary,
+              label: 'Backup (Export)',
+              onTap: () {
+                Navigator.pop(ctx);
+                final txt = '${note.title}\n\n${note.content}'.trim();
+                if (txt.isNotEmpty) {
+                  // Sharing a file-like output or just standard share
+                  Share.share(txt, subject: '${note.title} Backup');
+                }
+              },
+            ),
+            const Divider(height: 24),
+            _buildOption(
+              icon: Icons.delete_outline_rounded,
+              color: theme.colorScheme.error,
+              label: 'Delete Note',
+              onTap: () {
+                ref.read(notesProvider.notifier).deleteNote(note.id);
+                if (ctx.mounted) Navigator.pop(ctx);
+              },
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOption({required IconData icon, required Color color, required String label, required VoidCallback onTap}) {
+    return ListTile(
+      onTap: onTap,
+      leading: Icon(icon, color: color, size: 22),
+      title: Text(label, style: GoogleFonts.inter(color: color, fontSize: 15, fontWeight: FontWeight.w500)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    );
   }
 
   @override
@@ -221,6 +322,7 @@ class HomeScreen extends ConsumerWidget {
                       ...pinnedNotes.map((note) => NoteCard(
                         note: note,
                         onTap: () => context.push('/editor/${note.id}'),
+                        onLongPress: () => _showNoteOptions(context, ref, note),
                       )),
                       const SizedBox(height: 20),
                     ],
@@ -235,6 +337,7 @@ class HomeScreen extends ConsumerWidget {
                       ...unpinnedNotes.map((note) => NoteCard(
                         note: note,
                         onTap: () => context.push('/editor/${note.id}'),
+                        onLongPress: () => _showNoteOptions(context, ref, note),
                       )),
                     ],
                   ]),

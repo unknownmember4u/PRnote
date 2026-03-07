@@ -6,11 +6,13 @@ import 'package:google_fonts/google_fonts.dart';
 class NoteCard extends StatelessWidget {
   final Note note;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
 
   const NoteCard({
     super.key,
     required this.note,
     required this.onTap,
+    this.onLongPress,
   });
 
   @override
@@ -27,6 +29,7 @@ class NoteCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
+          onLongPress: onLongPress,
           borderRadius: BorderRadius.circular(16),
           splashColor: theme.colorScheme.primary.withValues(alpha: 0.06),
           highlightColor: theme.colorScheme.primary.withValues(alpha: 0.03),
