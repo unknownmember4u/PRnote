@@ -155,3 +155,9 @@ final favoriteNotesProvider = FutureProvider<List<Note>>((ref) async {
   final dao = NoteDao();
   return dao.getFavoriteNotes();
 });
+
+/// Provider for note versions
+final noteVersionsProvider = FutureProvider.family<List<NoteVersion>, String>((ref, noteId) async {
+  final dao = NoteDao();
+  return dao.getVersionsForNote(noteId);
+});

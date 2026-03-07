@@ -12,6 +12,7 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:prnote/core/providers/editor_settings_provider.dart';
+import 'package:prnote/models/version.dart';
 
 enum _EditorMenuAction { share, copyText, versionHistory, moveToTrash }
 
@@ -112,6 +113,11 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
     if (_hasUnsavedChanges) {
       await _performAutoSave();
     }
+    if (_currentNote != null) {
+      await ref.read(notesProvider.notifier).saveVersion(_currentNote!);
+      // Refresh version history list automatically if we create a new snapshot
+      ref.invalidate(noteVersionsProvider(_currentNote!.id));
+    }
     if (!mounted) return;
     
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -172,12 +178,8 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
         );
         return;
       case _EditorMenuAction.versionHistory:
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Version history coming soon', style: GoogleFonts.inter()),
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        if (_currentNote == null) return;
+        _showVersionHistorySheet();
         return;
       case _EditorMenuAction.moveToTrash:
         if (_currentNote == null) return;
@@ -299,6 +301,125 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
             const SizedBox(height: 12),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showVersionHistorySheet() {
+    final theme = Theme.of(context);
+    
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: theme.scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      isScrollControlled: true,
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        maxChildSize: 0.9,
+        minChildSize: 0.4,
+        expand: false,
+        builder: (context, scrollController) {
+          return Consumer(
+            builder: (context, ref, child) {
+              final versionsAsync = ref.watch(noteVersionsProvider(_currentNote!.id));
+              return Padding(
+                padding: const EdgeInsets.only(left: 20, right: 20, top: 16),
+                child: Column(
+                  children: [
+                    // Handle
+                    Container(
+                      width: 36, height: 4,
+                      decoration: BoxDecoration(
+                        color: theme.dividerColor,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text('Version History',
+                      style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: versionsAsync.when(
+                        loading: () => Center(
+                          child: CircularProgressIndicator(color: theme.colorScheme.primary),
+                        ),
+                        error: (e, st) => Center(child: Text('Error loading versions', style: GoogleFonts.inter())),
+                        data: (versions) {
+                          if (versions.isEmpty) {
+                            return Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(32.0),
+                                child: Text('No version history yet.\\nTap "Save Note" to create your first snapshot.',
+                                  style: GoogleFonts.inter(color: theme.textTheme.bodySmall?.color, height: 1.5),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            );
+                          }
+                          
+                          return ListView.separated(
+                            controller: scrollController,
+                            physics: const BouncingScrollPhysics(),
+                            itemCount: versions.length,
+                            separatorBuilder: (_, __) => Divider(height: 1, color: theme.dividerColor.withValues(alpha: 0.2)),
+                            itemBuilder: (context, index) {
+                              final version = versions[index];
+                              final date = DateFormat('MMM d, yyyy · h:mm a').format(version.createdAt);
+                              
+                              return ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                leading: CircleAvatar(
+                                  backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+                                  child: Text('v${version.versionNumber}', 
+                                    style: GoogleFonts.inter(color: theme.colorScheme.primary, fontWeight: FontWeight.w700, fontSize: 13)),
+                                ),
+                                title: Text(version.title.isEmpty ? 'Untitled' : version.title,
+                                  style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 15), maxLines: 1),
+                                subtitle: Text(date,
+                                  style: GoogleFonts.inter(color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.6), fontSize: 13)),
+                                trailing: TextButton.icon(
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: theme.colorScheme.primary,
+                                  ),
+                                  icon: const Icon(Icons.restore_rounded, size: 18),
+                                  label: Text('Restore', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                                  onPressed: () {
+                                    Navigator.pop(ctx);
+                                    _restoreVersion(version);
+                                  },
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  void _restoreVersion(NoteVersion version) {
+    _titleController.text = version.title;
+    _contentController.text = version.content;
+    _onTextChanged();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle_rounded, color: Color(0xFF26A69A), size: 18),
+            const SizedBox(width: 8),
+            Text('Restored Version ${version.versionNumber}', style: GoogleFonts.inter(fontWeight: FontWeight.w500)),
+          ],
+        ),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
