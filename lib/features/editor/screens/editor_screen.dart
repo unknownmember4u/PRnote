@@ -10,6 +10,7 @@ import 'package:prnote/models/note.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:share_plus/share_plus.dart';
 
 enum _EditorMenuAction { share, copyText, versionHistory, moveToTrash }
 
@@ -121,12 +122,8 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   Future<void> _onMenuSelected(_EditorMenuAction action) async {
     switch (action) {
       case _EditorMenuAction.share:
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Share coming soon', style: GoogleFonts.inter()),
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        if (_currentNote == null) return;
+        _showShareSheet();
         return;
       case _EditorMenuAction.copyText:
         await Clipboard.setData(ClipboardData(
@@ -161,6 +158,174 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
         context.go('/home');
         return;
     }
+  }
+
+  void _showShareSheet() {
+    final theme = Theme.of(context);
+    final isLight = theme.brightness == Brightness.light;
+    final title = _titleController.text.trim();
+    final content = _contentController.text.trim();
+
+    if (title.isEmpty && content.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Nothing to share — add some content first',
+              style: GoogleFonts.inter()),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: theme.scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle
+            Container(
+              width: 36, height: 4,
+              decoration: BoxDecoration(
+                color: theme.dividerColor,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text('Share Note',
+              style: GoogleFonts.inter(fontSize: 17, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 4),
+            Text(
+              title.isNotEmpty ? title : 'Untitled',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.5),
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 16),
+
+            // Options container
+            Container(
+              decoration: BoxDecoration(
+                color: theme.cardTheme.color,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: theme.dividerColor.withValues(alpha: isLight ? 0.3 : 0.2),
+                  width: 0.5,
+                ),
+              ),
+              child: Column(
+                children: [
+                  // Share as text
+                  _ShareOption(
+                    icon: Icons.text_snippet_outlined,
+                    iconColor: const Color(0xFF5C6BC0),
+                    title: 'Share as text',
+                    subtitle: 'Plain text content only',
+                    theme: theme,
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _shareText(plain: true);
+                    },
+                  ),
+                  Divider(height: 1, indent: 56,
+                    color: theme.dividerColor.withValues(alpha: 0.2)),
+
+                  // Share formatted
+                  _ShareOption(
+                    icon: Icons.article_outlined,
+                    iconColor: const Color(0xFF26A69A),
+                    title: 'Share formatted',
+                    subtitle: 'Title, content & date included',
+                    theme: theme,
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _shareText(plain: false);
+                    },
+                  ),
+                  Divider(height: 1, indent: 56,
+                    color: theme.dividerColor.withValues(alpha: 0.2)),
+
+                  // Copy to clipboard
+                  _ShareOption(
+                    icon: Icons.copy_rounded,
+                    iconColor: theme.colorScheme.primary,
+                    title: 'Copy to clipboard',
+                    subtitle: 'Copy note content for pasting',
+                    theme: theme,
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _copyToClipboard();
+                    },
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _shareText({required bool plain}) async {
+    final title = _titleController.text.trim();
+    final content = _contentController.text.trim();
+
+    String shareContent;
+    if (plain) {
+      shareContent = [
+        if (title.isNotEmpty) title,
+        if (content.isNotEmpty) content,
+      ].join('\n\n');
+    } else {
+      final date = _currentNote != null
+          ? DateFormat('MMMM d, yyyy · h:mm a').format(_currentNote!.updatedAt)
+          : '';
+      shareContent = [
+        if (title.isNotEmpty) '📝 $title',
+        if (title.isNotEmpty) '─' * 20,
+        if (content.isNotEmpty) content,
+        '',
+        if (date.isNotEmpty) '📅 $date',
+        '— Shared from PRnote',
+      ].join('\n');
+    }
+
+    await SharePlus.instance.share(
+      ShareParams(text: shareContent),
+    );
+  }
+
+  Future<void> _copyToClipboard() async {
+    final title = _titleController.text.trim();
+    final content = _contentController.text.trim();
+    final text = [
+      if (title.isNotEmpty) title,
+      if (content.isNotEmpty) content,
+    ].join('\n\n');
+
+    await Clipboard.setData(ClipboardData(text: text));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle_rounded, color: Color(0xFF26A69A), size: 18),
+            const SizedBox(width: 8),
+            Text('Copied to clipboard', style: GoogleFonts.inter()),
+          ],
+        ),
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   @override
@@ -500,6 +665,61 @@ class _ToolbarAction extends StatelessWidget {
         icon,
         size: 22,
         color: isActive ? activeColor : inactiveColor.withValues(alpha: 0.5),
+      ),
+    );
+  }
+}
+
+// ─── Share Option Tile ───────────────────────────────
+class _ShareOption extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String title;
+  final String subtitle;
+  final ThemeData theme;
+  final VoidCallback onTap;
+
+  const _ShareOption({
+    required this.icon,
+    required this.iconColor,
+    required this.title,
+    required this.subtitle,
+    required this.theme,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        leading: Container(
+          width: 40, height: 40,
+          decoration: BoxDecoration(
+            color: iconColor.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(11),
+          ),
+          child: Icon(icon, size: 20, color: iconColor),
+        ),
+        title: Text(
+          title,
+          style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500),
+        ),
+        subtitle: Text(
+          subtitle,
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.5),
+          ),
+        ),
+        trailing: Icon(
+          Icons.chevron_right_rounded,
+          size: 20,
+          color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.3),
+        ),
+        onTap: onTap,
       ),
     );
   }
