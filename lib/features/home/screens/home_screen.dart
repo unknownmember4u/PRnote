@@ -44,6 +44,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     });
   }
 
+  void _selectAll(List<Note> notes) {
+    setState(() {
+      _selectedNotes.addAll(notes.map((n) => n.id));
+    });
+  }
+
   String _greeting() {
     final hour = DateTime.now().hour;
     if (hour < 12) return 'Good morning';
@@ -243,6 +249,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
               actions: [
+                IconButton(
+                  icon: const Icon(Icons.select_all_rounded),
+                  tooltip: 'Select All',
+                  onPressed: () {
+                    final notes = ref.read(notesProvider).valueOrNull ?? [];
+                    if (notes.isNotEmpty) {
+                      _selectAll(notes);
+                    }
+                  },
+                ),
                 IconButton(
                   icon: const Icon(Icons.copy_rounded),
                   tooltip: 'Copy',
