@@ -7,19 +7,23 @@ import 'package:prnote/core/constants/app_constants.dart';
 class EditorSettings {
   final String fontFamily;
   final double fontSize;
+  final int autoSaveIntervalSeconds;
 
   const EditorSettings({
     this.fontFamily = 'Inter',
     this.fontSize = 16.0,
+    this.autoSaveIntervalSeconds = 3,
   });
 
   EditorSettings copyWith({
     String? fontFamily,
     double? fontSize,
+    int? autoSaveIntervalSeconds,
   }) {
     return EditorSettings(
       fontFamily: fontFamily ?? this.fontFamily,
       fontSize: fontSize ?? this.fontSize,
+      autoSaveIntervalSeconds: autoSaveIntervalSeconds ?? this.autoSaveIntervalSeconds,
     );
   }
 
@@ -67,10 +71,12 @@ class EditorSettingsNotifier extends StateNotifier<EditorSettings> {
     final prefs = await SharedPreferences.getInstance();
     final family = prefs.getString(AppConstants.prefEditorFontFamily) ?? 'Inter';
     final size = prefs.getDouble(AppConstants.prefEditorFontSize) ?? 16.0;
+    final autoSave = prefs.getInt(AppConstants.prefAutoSaveInterval) ?? 3;
     
     state = EditorSettings(
       fontFamily: family,
       fontSize: size.clamp(12.0, 32.0),
+      autoSaveIntervalSeconds: autoSave,
     );
   }
 
@@ -85,6 +91,12 @@ class EditorSettingsNotifier extends StateNotifier<EditorSettings> {
     state = state.copyWith(fontSize: clampedSize);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble(AppConstants.prefEditorFontSize, clampedSize);
+  }
+
+  Future<void> updateAutoSaveInterval(int seconds) async {
+    state = state.copyWith(autoSaveIntervalSeconds: seconds);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(AppConstants.prefAutoSaveInterval, seconds);
   }
 }
 

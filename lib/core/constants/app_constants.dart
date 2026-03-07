@@ -20,6 +20,7 @@ class AppConstants {
   static const String prefIsFirstLaunch = 'is_first_launch';
   static const String prefEditorFontSize = 'editor_font_size';
   static const String prefEditorFontFamily = 'editor_font_family';
+  static const String prefAutoSaveInterval = 'auto_save_interval';
 
   // Theme modes
   static const String themeModeLight = 'light';

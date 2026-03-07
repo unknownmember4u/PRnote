@@ -80,7 +80,13 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   void _onTextChanged() {
     _hasUnsavedChanges = true;
     _autoSaveTimer?.cancel();
-    _autoSaveTimer = Timer(AppConstants.autoSaveInterval, _performAutoSave);
+    
+    final autoSaveSeconds = ref.read(editorSettingsProvider).autoSaveIntervalSeconds;
+    if (autoSaveSeconds > 0) {
+      _autoSaveTimer = Timer(Duration(seconds: autoSaveSeconds), _performAutoSave);
+    } else {
+      setState(() {}); // Trigger rebuild to show unsaved indicator when manually typing
+    }
   }
 
   Future<void> _performAutoSave() async {
@@ -100,6 +106,25 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
       _hasUnsavedChanges = false;
       _lastSaved = DateTime.now();
     });
+  }
+
+  Future<void> _manualSave() async {
+    if (_hasUnsavedChanges) {
+      await _performAutoSave();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle_rounded, color: Color(0xFF26A69A), size: 18),
+              const SizedBox(width: 8),
+              Text('Note saved manually', style: GoogleFonts.inter()),
+            ],
+          ),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   Future<void> _saveAndExit() async {
@@ -560,6 +585,16 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                   fontWeight: FontWeight.w500,
                 ),
               ),
+            ),
+
+          // Manual Save button
+          if (_hasUnsavedChanges)
+            _ToolbarAction(
+              icon: Icons.save_rounded,
+              isActive: true,
+              activeColor: const Color(0xFF26A69A),
+              inactiveColor: theme.textTheme.bodySmall?.color ?? Colors.grey,
+              onTap: _manualSave,
             ),
 
           // Pin toggle

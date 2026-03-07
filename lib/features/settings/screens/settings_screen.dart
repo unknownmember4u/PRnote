@@ -4,6 +4,7 @@ import 'package:prnote/core/theme/theme_provider.dart';
 import 'package:prnote/core/constants/app_constants.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:prnote/core/widgets/prnote_logo.dart';
+import 'package:prnote/core/providers/editor_settings_provider.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -11,6 +12,7 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentTheme = ref.watch(themeProvider);
+    final editorSettings = ref.watch(editorSettingsProvider);
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
     final topPadding = MediaQuery.of(context).padding.top;
@@ -102,8 +104,11 @@ class SettingsScreen extends ConsumerWidget {
               _SettingsTile(
                 icon: Icons.timer_outlined,
                 title: 'Auto-save interval',
-                subtitle: '${AppConstants.autoSaveInterval.inSeconds} seconds',
+                subtitle: editorSettings.autoSaveIntervalSeconds == 0 
+                  ? 'Off (Manual save only)' 
+                  : '${editorSettings.autoSaveIntervalSeconds} seconds',
                 theme: theme,
+                onTap: () => _showAutoSaveDialog(context, ref, editorSettings.autoSaveIntervalSeconds),
               ),
               _divider(theme),
               _SettingsTile(
@@ -292,6 +297,54 @@ class SettingsScreen extends ConsumerWidget {
       ),
     );
   }
+
+  void _showAutoSaveDialog(BuildContext context, WidgetRef ref, int currentVal) {
+    final options = [
+      {'label': 'Off (Manual)', 'value': 0},
+      {'label': '3 seconds', 'value': 3},
+      {'label': '5 seconds', 'value': 5},
+      {'label': '10 seconds', 'value': 10},
+      {'label': '30 seconds', 'value': 30},
+      {'label': '1 minute', 'value': 60},
+    ];
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        final theme = Theme.of(ctx);
+        return AlertDialog(
+          backgroundColor: theme.scaffoldBackgroundColor,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text('Auto-save Interval', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 18)),
+          contentPadding: const EdgeInsets.only(top: 16, bottom: 8),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: options.map((opt) {
+              final val = opt['value'] as int;
+              return RadioListTile<int>(
+                title: Text(opt['label'] as String, style: GoogleFonts.inter(fontSize: 15)),
+                value: val,
+                groupValue: currentVal,
+                activeColor: theme.colorScheme.primary,
+                onChanged: (newVal) {
+                  if (newVal != null) {
+                    ref.read(editorSettingsProvider.notifier).updateAutoSaveInterval(newVal);
+                    Navigator.pop(ctx);
+                  }
+                },
+              );
+            }).toList(),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text('Cancel', style: GoogleFonts.inter(color: theme.textTheme.bodySmall?.color)),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
 
 // ─── Settings Group Card ────────────────────────────
@@ -342,6 +395,7 @@ class _SettingsTile extends StatelessWidget {
   final ThemeData theme;
   final Widget? trailing;
   final Color? iconColor;
+  final VoidCallback? onTap;
 
   const _SettingsTile({
     required this.icon,
@@ -350,6 +404,7 @@ class _SettingsTile extends StatelessWidget {
     required this.theme,
     this.trailing,
     this.iconColor,
+    this.onTap,
   });
 
   @override
@@ -359,6 +414,7 @@ class _SettingsTile extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: ListTile(
+        onTap: onTap,
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
         leading: Container(
           width: 40, height: 40,
