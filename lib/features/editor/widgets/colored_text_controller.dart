@@ -7,12 +7,14 @@ class CharStyle {
   final bool isItalic;
   final bool isUnderline;
   final String? font;
+  final double? fontSize;
 
   const CharStyle({
     this.color,
     this.isItalic = false,
     this.isUnderline = false,
     this.font,
+    this.fontSize,
   });
 
   CharStyle copyWith({
@@ -20,12 +22,14 @@ class CharStyle {
     bool? isItalic,
     bool? isUnderline,
     ValueGetter<String?>? font,
+    ValueGetter<double?>? fontSize,
   }) {
     return CharStyle(
       color: color != null ? color() : this.color,
       isItalic: isItalic ?? this.isItalic,
       isUnderline: isUnderline ?? this.isUnderline,
       font: font != null ? font() : this.font,
+      fontSize: fontSize != null ? fontSize() : this.fontSize,
     );
   }
 
@@ -37,12 +41,13 @@ class CharStyle {
           color == other.color &&
           isItalic == other.isItalic &&
           isUnderline == other.isUnderline &&
-          font == other.font;
+          font == other.font &&
+          fontSize == other.fontSize;
 
   @override
-  int get hashCode => Object.hash(color, isItalic, isUnderline, font);
+  int get hashCode => Object.hash(color, isItalic, isUnderline, font, fontSize);
 
-  bool get isDefault => color == null && !isItalic && !isUnderline && font == null;
+  bool get isDefault => color == null && !isItalic && !isUnderline && font == null && fontSize == null;
 }
 
 typedef ValueGetter<T> = T Function();
@@ -103,6 +108,10 @@ class ColoredTextController extends TextEditingController {
   void toggleUnderline() {
     _updateSelection((style) => style.copyWith(isUnderline: !style.isUnderline));
   }
+
+  void fontSizeSelection(double? fontSize) {
+    _updateSelection((style) => style.copyWith(fontSize: () => fontSize));
+  }
   
   // Expose current styles at cursor to update UI toggles
   CharStyle get currentStyleAtCursor {
@@ -143,12 +152,14 @@ class ColoredTextController extends TextEditingController {
           bool i = item['i'] == true;
           bool u = item['u'] == true;
           String? f = item['f'] as String?;
+          double? s = (item['s'] as num?)?.toDouble();
           
           final style = CharStyle(
               color: c != null ? Color(c) : null,
               isItalic: i,
               isUnderline: u,
               font: f,
+              fontSize: s,
           );
           _charStyles.addAll(List.generate(length, (_) => style));
         }
@@ -211,6 +222,7 @@ class ColoredTextController extends TextEditingController {
     if (style.isItalic) map['i'] = true;
     if (style.isUnderline) map['u'] = true;
     if (style.font != null) map['f'] = style.font;
+    if (style.fontSize != null) map['s'] = style.fontSize;
     spans.add(map);
   }
 
@@ -301,6 +313,9 @@ class ColoredTextController extends TextEditingController {
       
       if (charStyle.color != null) {
           effectiveStyle = effectiveStyle.copyWith(color: charStyle.color);
+      }
+      if (charStyle.fontSize != null) {
+          effectiveStyle = effectiveStyle.copyWith(fontSize: charStyle.fontSize);
       }
       if (charStyle.isItalic) {
           effectiveStyle = effectiveStyle.copyWith(fontStyle: FontStyle.italic);

@@ -1004,33 +1004,37 @@ class _FontSettingsBottomSheet extends ConsumerWidget {
               ),
               const SizedBox(height: 24),
 
-              // Size slider
-              Row(
-                children: [
-                  Text('A', style: GoogleFonts.inter(fontSize: 14)),
-                  Expanded(
-                    child: SliderTheme(
-                      data: SliderTheme.of(context).copyWith(
-                        activeTrackColor: theme.colorScheme.primary,
-                        inactiveTrackColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-                        thumbColor: theme.colorScheme.primary,
-                        overlayColor: theme.colorScheme.primary.withValues(alpha: 0.2),
-                        trackHeight: 4,
-                      ),
-                      child: Slider(
-                        value: settings.fontSize,
-                        min: 12.0,
-                        max: 32.0,
-                        divisions: 20,
-                        onChanged: (val) {
-                          ref.read(editorSettingsProvider.notifier).updateFontSize(val);
-                        },
-                      ),
+            // Size slider
+            Text(
+              'Font Size (Selected Text)',
+              style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: theme.textTheme.bodySmall?.color),
+            ),
+            Row(
+              children: [
+                Text('A', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w400)),
+                Expanded(
+                  child: SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      activeTrackColor: theme.colorScheme.primary,
+                      inactiveTrackColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+                      thumbColor: theme.colorScheme.primary,
+                      overlayColor: theme.colorScheme.primary.withValues(alpha: 0.2),
+                      trackHeight: 4,
+                    ),
+                    child: Slider(
+                      value: currentStyle.fontSize ?? settings.fontSize,
+                      min: 10.0,
+                      max: 72.0,
+                      divisions: 62,
+                      onChanged: (val) {
+                        controller.fontSizeSelection(val == settings.fontSize ? null : val);
+                      },
                     ),
                   ),
-                  Text('A', style: GoogleFonts.inter(fontSize: 22)),
-                ],
-              ),
+                ),
+                Text('A', style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w700)),
+              ],
+            ),
               const SizedBox(height: 16),
               
               // Font family selection
