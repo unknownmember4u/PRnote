@@ -175,7 +175,7 @@ class ColoredTextController extends TextEditingController {
         value = value.copyWith(text: textPart, selection: const TextSelection.collapsed(offset: 0), composing: TextRange.empty);
       } else {
         value = value.copyWith(text: encodedText, selection: const TextSelection.collapsed(offset: 0), composing: TextRange.empty);
-        _charStyles = List.filled(encodedText.length, const CharStyle());
+        _charStyles = List.filled(encodedText.length, const CharStyle(), growable: true);
       }
     } catch (e) {
       String textPart = encodedText;
@@ -184,7 +184,7 @@ class ColoredTextController extends TextEditingController {
         textPart = encodedText.substring(0, idx);
       }
       value = value.copyWith(text: textPart, selection: const TextSelection.collapsed(offset: 0), composing: TextRange.empty);
-      _charStyles = List.filled(textPart.length, const CharStyle());
+      _charStyles = List.filled(textPart.length, const CharStyle(), growable: true);
     } finally {
       _isDeserializing = false;
     }
@@ -263,10 +263,10 @@ class ColoredTextController extends TextEditingController {
          }
          
          if (addedCount > 0) {
-            _charStyles.insertAll(prefixLen, List.filled(addedCount, newCharStyle));
+            _charStyles.insertAll(prefixLen, List.filled(addedCount, newCharStyle, growable: true));
          }
       } else {
-         _charStyles = List.filled(newText.length, const CharStyle());
+         _charStyles = List.filled(newText.length, const CharStyle(), growable: true);
       }
     }
     

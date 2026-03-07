@@ -1070,7 +1070,7 @@ class _FontSettingsBottomSheet extends ConsumerWidget {
                         alignment: Alignment.center,
                         child: Text(
                           font,
-                          style: settings.copyWith(fontFamily: font, clearTextColor: true).getTextStyle(
+                          style: settings.copyWith(fontFamily: font).getTextStyle(
                             fontSizeOverride: 14,
                             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                             defaultColor: isSelected ? Colors.white : theme.textTheme.bodyLarge?.color,
