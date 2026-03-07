@@ -111,20 +111,22 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   Future<void> _manualSave() async {
     if (_hasUnsavedChanges) {
       await _performAutoSave();
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.check_circle_rounded, color: Color(0xFF26A69A), size: 18),
-              const SizedBox(width: 8),
-              Text('Note saved manually', style: GoogleFonts.inter()),
-            ],
-          ),
-          duration: const Duration(seconds: 2),
-        ),
-      );
     }
+    if (!mounted) return;
+    
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle_rounded, color: Color(0xFF26A69A), size: 18),
+            const SizedBox(width: 8),
+            Text('Saved successfully', style: GoogleFonts.inter(fontWeight: FontWeight.w500)),
+          ],
+        ),
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   Future<void> _saveAndExit() async {
@@ -433,54 +435,13 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                     if (_currentNote != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 4, bottom: 16),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.06),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                DateFormat('MMM d, yyyy · h:mm a')
-                                    .format(_currentNote!.updatedAt),
-                                style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                  color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.5),
-                                ),
-                              ),
-                            ),
-                            if (_lastSaved != null) ...[
-                              const SizedBox(width: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF26A69A).withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(
-                                      Icons.check_circle_rounded,
-                                      size: 12,
-                                      color: Color(0xFF26A69A),
-                                    ),
-                                    const SizedBox(width: 3),
-                                    Text(
-                                      'Saved',
-                                      style: GoogleFonts.inter(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w500,
-                                        color: const Color(0xFF26A69A),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ],
+                        child: Text(
+                          DateFormat('MMM d, yyyy · h:mm a').format(_currentNote!.updatedAt),
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.4),
+                          ),
                         ),
                       ),
 
@@ -587,15 +548,45 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
               ),
             ),
 
-          // Manual Save button
-          if (_hasUnsavedChanges)
-            _ToolbarAction(
-              icon: Icons.save_rounded,
-              isActive: true,
-              activeColor: const Color(0xFF26A69A),
-              inactiveColor: theme.textTheme.bodySmall?.color ?? Colors.grey,
-              onTap: _manualSave,
+          // Manual Save button (Always visible, state driven)
+          InkWell(
+            onTap: _manualSave,
+            borderRadius: BorderRadius.circular(12),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: _hasUnsavedChanges 
+                  ? const Color(0xFF26A69A).withValues(alpha: 0.15)
+                  : theme.textTheme.bodySmall?.color?.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _hasUnsavedChanges ? Icons.save_rounded : Icons.check_circle_rounded,
+                    size: 16,
+                    color: _hasUnsavedChanges 
+                      ? const Color(0xFF26A69A)
+                      : theme.textTheme.bodySmall?.color?.withValues(alpha: 0.5),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    _hasUnsavedChanges ? 'Save' : 'Saved',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: _hasUnsavedChanges 
+                        ? const Color(0xFF26A69A)
+                        : theme.textTheme.bodySmall?.color?.withValues(alpha: 0.5),
+                    ),
+                  ),
+                ],
+              ),
             ),
+          ),
+          const SizedBox(width: 4),
 
           // Pin toggle
           _ToolbarAction(
