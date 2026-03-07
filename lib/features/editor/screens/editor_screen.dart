@@ -925,6 +925,7 @@ class _ShareOption extends StatelessWidget {
 }
 
 // ─── Font Settings Bottom Sheet ───────────────────────
+// ─── Font Settings Bottom Sheet ───────────────────────
 class _FontSettingsBottomSheet extends ConsumerWidget {
   final ColoredTextController controller;
 
@@ -942,166 +943,229 @@ class _FontSettingsBottomSheet extends ConsumerWidget {
         color: isLight ? Colors.white : theme.colorScheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Handle
-          Center(
-            child: Container(
-              width: 40, height: 4,
-              decoration: BoxDecoration(
-                color: theme.dividerColor,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            'Typography',
-            style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 24),
+      child: ListenableBuilder(
+        listenable: controller,
+        builder: (context, _) {
+          final currentStyle = controller.currentStyleAtCursor;
 
-          // Size slider
-          Row(
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('A', style: GoogleFonts.inter(fontSize: 14)),
-              Expanded(
-                child: SliderTheme(
-                  data: SliderTheme.of(context).copyWith(
-                    activeTrackColor: theme.colorScheme.primary,
-                    inactiveTrackColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-                    thumbColor: theme.colorScheme.primary,
-                    overlayColor: theme.colorScheme.primary.withValues(alpha: 0.2),
-                    trackHeight: 4,
-                  ),
-                  child: Slider(
-                    value: settings.fontSize,
-                    min: 12.0,
-                    max: 32.0,
-                    divisions: 20,
-                    onChanged: (val) {
-                      ref.read(editorSettingsProvider.notifier).updateFontSize(val);
-                    },
+              // Handle
+              Center(
+                child: Container(
+                  width: 40, height: 4,
+                  decoration: BoxDecoration(
+                    color: theme.dividerColor,
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
               ),
-              Text('A', style: GoogleFonts.inter(fontSize: 22)),
-            ],
-          ),
-          const SizedBox(height: 16),
-          
-          // Font family selection
-          Text(
-            'Font Family',
-            style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: theme.textTheme.bodySmall?.color),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 48,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              itemCount: EditorSettings.availableFonts.length,
-              separatorBuilder: (context, index) => const SizedBox(width: 8),
-              itemBuilder: (context, index) {
-                final font = EditorSettings.availableFonts[index];
-                final isSelected = settings.fontFamily == font;
-                
-                return InkWell(
-                  onTap: () {
-                    ref.read(editorSettingsProvider.notifier).updateFontFamily(font);
-                  },
-                  borderRadius: BorderRadius.circular(24),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: isSelected ? theme.colorScheme.primary : theme.colorScheme.primary.withValues(alpha: 0.05),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Typography',
+                    style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600),
+                  ),
+                  Row(
+                    children: [
+                      _FormatIconButton(
+                        icon: Icons.format_italic_rounded,
+                        isSelected: currentStyle.isItalic,
+                        onTap: () => controller.toggleItalic(),
+                      ),
+                      const SizedBox(width: 8),
+                      _FormatIconButton(
+                        icon: Icons.format_underlined_rounded,
+                        isSelected: currentStyle.isUnderline,
+                        onTap: () => controller.toggleUnderline(),
+                      ),
+                    ],
+                  )
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // Size slider
+              Row(
+                children: [
+                  Text('A', style: GoogleFonts.inter(fontSize: 14)),
+                  Expanded(
+                    child: SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        activeTrackColor: theme.colorScheme.primary,
+                        inactiveTrackColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+                        thumbColor: theme.colorScheme.primary,
+                        overlayColor: theme.colorScheme.primary.withValues(alpha: 0.2),
+                        trackHeight: 4,
+                      ),
+                      child: Slider(
+                        value: settings.fontSize,
+                        min: 12.0,
+                        max: 32.0,
+                        divisions: 20,
+                        onChanged: (val) {
+                          ref.read(editorSettingsProvider.notifier).updateFontSize(val);
+                        },
+                      ),
+                    ),
+                  ),
+                  Text('A', style: GoogleFonts.inter(fontSize: 22)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              
+              // Font family selection
+              Text(
+                'Font Family (Selected Text)',
+                style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: theme.textTheme.bodySmall?.color),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 48,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: EditorSettings.availableFonts.length,
+                  separatorBuilder: (context, index) => const SizedBox(width: 8),
+                  itemBuilder: (context, index) {
+                    final font = EditorSettings.availableFonts[index];
+                    final isSelected = (currentStyle.font ?? settings.fontFamily) == font;
+                    
+                    return InkWell(
+                      onTap: () {
+                        controller.fontSelection(font == settings.fontFamily ? null : font);
+                      },
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(
-                        color: isSelected ? theme.colorScheme.primary : Colors.transparent,
-                        width: 1,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: isSelected ? theme.colorScheme.primary : theme.colorScheme.primary.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color: isSelected ? theme.colorScheme.primary : Colors.transparent,
+                            width: 1,
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          font,
+                          style: settings.copyWith(fontFamily: font, clearTextColor: true).getTextStyle(
+                            fontSizeOverride: 14,
+                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                            defaultColor: isSelected ? Colors.white : theme.textTheme.bodyLarge?.color,
+                          ),
+                        ),
                       ),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      font,
-                      style: settings.copyWith(fontFamily: font, clearTextColor: true).getTextStyle(
-                        fontSizeOverride: 14,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                        defaultColor: isSelected ? Colors.white : theme.textTheme.bodyLarge?.color,
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: 24),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 24),
 
-          // Line Height slider
-          Text(
-            'Line Spacing',
-            style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: theme.textTheme.bodySmall?.color),
-          ),
-          Row(
-            children: [
-              Icon(Icons.format_line_spacing_rounded, size: 18, color: theme.textTheme.bodySmall?.color),
-              Expanded(
-                child: SliderTheme(
-                  data: SliderTheme.of(context).copyWith(
-                    activeTrackColor: theme.colorScheme.primary,
-                    inactiveTrackColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-                    thumbColor: theme.colorScheme.primary,
-                    overlayColor: theme.colorScheme.primary.withValues(alpha: 0.2),
-                    trackHeight: 4,
+              // Line Height slider
+              Text(
+                'Line Spacing',
+                style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: theme.textTheme.bodySmall?.color),
+              ),
+              Row(
+                children: [
+                  Icon(Icons.format_line_spacing_rounded, size: 18, color: theme.textTheme.bodySmall?.color),
+                  Expanded(
+                    child: SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        activeTrackColor: theme.colorScheme.primary,
+                        inactiveTrackColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+                        thumbColor: theme.colorScheme.primary,
+                        overlayColor: theme.colorScheme.primary.withValues(alpha: 0.2),
+                        trackHeight: 4,
+                      ),
+                      child: Slider(
+                        value: settings.lineHeight,
+                        min: 1.0,
+                        max: 3.0,
+                        divisions: 10,
+                        onChanged: (val) {
+                          ref.read(editorSettingsProvider.notifier).updateLineHeight(val);
+                        },
+                      ),
+                    ),
                   ),
-                  child: Slider(
-                    value: settings.lineHeight,
-                    min: 1.0,
-                    max: 3.0,
-                    divisions: 10,
-                    onChanged: (val) {
-                      ref.read(editorSettingsProvider.notifier).updateLineHeight(val);
-                    },
-                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 16),
+              // Text Color selection
+              Text(
+                'Text Color',
+                style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: theme.textTheme.bodySmall?.color),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 48,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  children: [
+                    // Default theme color option
+                    _ColorOption(
+                      color: null,
+                      themeColor: theme.textTheme.bodyLarge?.color,
+                      isSelected: currentStyle.color == null,
+                      onTap: () => controller.colorSelection(null),
+                    ),
+                    _ColorOption(color: const Color(0xFFEF5350), isSelected: currentStyle.color == const Color(0xFFEF5350), onTap: () => controller.colorSelection(const Color(0xFFEF5350))),
+                    _ColorOption(color: const Color(0xFF42A5F5), isSelected: currentStyle.color == const Color(0xFF42A5F5), onTap: () => controller.colorSelection(const Color(0xFF42A5F5))),
+                    _ColorOption(color: const Color(0xFF66BB6A), isSelected: currentStyle.color == const Color(0xFF66BB6A), onTap: () => controller.colorSelection(const Color(0xFF66BB6A))),
+                    _ColorOption(color: const Color(0xFFFFCA28), isSelected: currentStyle.color == const Color(0xFFFFCA28), onTap: () => controller.colorSelection(const Color(0xFFFFCA28))),
+                    _ColorOption(color: const Color(0xFFAB47BC), isSelected: currentStyle.color == const Color(0xFFAB47BC), onTap: () => controller.colorSelection(const Color(0xFFAB47BC))),
+                    _ColorOption(color: const Color(0xFF8D6E63), isSelected: currentStyle.color == const Color(0xFF8D6E63), onTap: () => controller.colorSelection(const Color(0xFF8D6E63))),
+                  ],
                 ),
               ),
             ],
+          );
+        }
+      ),
+    );
+  }
+}
+
+class _FormatIconButton extends StatelessWidget {
+  final IconData icon;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _FormatIconButton({
+    required this.icon,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: isSelected ? theme.colorScheme.primary.withValues(alpha: 0.15) : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected ? theme.colorScheme.primary : theme.dividerColor,
           ),
-          
-          const SizedBox(height: 16),
-          // Text Color selection
-          Text(
-            'Text Color',
-            style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: theme.textTheme.bodySmall?.color),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 48,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              children: [
-                // Default theme color option
-                _ColorOption(
-                  color: null,
-                  themeColor: theme.textTheme.bodyLarge?.color,
-                  isSelected: false,
-                  onTap: () => controller.colorSelection(null),
-                ),
-                _ColorOption(color: const Color(0xFFEF5350), isSelected: false, onTap: () => controller.colorSelection(const Color(0xFFEF5350))),
-                _ColorOption(color: const Color(0xFF42A5F5), isSelected: false, onTap: () => controller.colorSelection(const Color(0xFF42A5F5))),
-                _ColorOption(color: const Color(0xFF66BB6A), isSelected: false, onTap: () => controller.colorSelection(const Color(0xFF66BB6A))),
-                _ColorOption(color: const Color(0xFFFFCA28), isSelected: false, onTap: () => controller.colorSelection(const Color(0xFFFFCA28))),
-                _ColorOption(color: const Color(0xFFAB47BC), isSelected: false, onTap: () => controller.colorSelection(const Color(0xFFAB47BC))),
-                _ColorOption(color: const Color(0xFF8D6E63), isSelected: false, onTap: () => controller.colorSelection(const Color(0xFF8D6E63))),
-              ],
-            ),
-          ),
-        ],
+        ),
+        child: Icon(
+          icon,
+          size: 20,
+          color: isSelected ? theme.colorScheme.primary : theme.iconTheme.color,
+        ),
       ),
     );
   }
