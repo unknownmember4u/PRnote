@@ -48,18 +48,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       await Future.delayed(const Duration(milliseconds: 2000));
       if (!mounted) return;
 
-      // Check for last edited note
-      final notesNotifier = ref.read(notesProvider.notifier);
-      final lastNoteId = await notesNotifier.getLastEditedNoteId();
-
-      if (!mounted) return;
-
-      if (lastNoteId != null) {
-        // Open to last edited note
-        context.go('/editor/$lastNoteId');
-      } else {
-        context.go('/home');
-      }
+      context.go('/home');
     } catch (_) {
       if (!mounted) return;
       context.go('/home');
