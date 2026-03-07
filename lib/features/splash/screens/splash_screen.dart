@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:prnote/core/providers/notes_provider.dart';
 import 'package:prnote/core/theme/theme_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:prnote/core/widgets/prnote_logo.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -97,26 +98,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
               opacity: _fadeAnim.value,
               child: Transform.scale(
                 scale: _scaleAnim.value,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Logo Image
-                    Image.asset(
-                      'assets/images/logo_full.png',
-                      width: MediaQuery.of(context).size.width * 0.65,
-                      fit: BoxFit.contain,
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'Your notes, your way',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w300,
-                        color: subtitleColor,
-                        letterSpacing: 2,
-                      ),
-                    ),
-                  ],
+                child: const PRnoteLogo(
+                  fontSize: 26.0,
+                  showSlogan: true,
+                  alignment: MainAxisAlignment.center,
                 ),
               ),
             );

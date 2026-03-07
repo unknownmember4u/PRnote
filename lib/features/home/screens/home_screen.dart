@@ -6,6 +6,7 @@ import 'package:prnote/features/home/widgets/note_card.dart';
 import 'package:prnote/features/home/widgets/empty_state.dart';
 import 'package:prnote/features/search/widgets/search_overlay.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:prnote/core/widgets/prnote_logo.dart';
 import 'package:intl/intl.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -44,11 +45,7 @@ class HomeScreen extends ConsumerWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Image.asset(
-                        'assets/images/logo_full.png',
-                        height: 38,
-                        fit: BoxFit.contain,
-                      ),
+                      const PRnoteLogo(fontSize: 24.0),
                       // Date badge
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

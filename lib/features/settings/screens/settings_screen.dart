@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:prnote/core/theme/theme_provider.dart';
 import 'package:prnote/core/constants/app_constants.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:prnote/core/widgets/prnote_logo.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -63,11 +64,7 @@ class SettingsScreen extends ConsumerWidget {
             ),
             child: Row(
               children: [
-                Image.asset(
-                  'assets/images/logo_full.png',
-                  height: 48,
-                  fit: BoxFit.contain,
-                ),
+                const PRnoteLogo(fontSize: 22.0),
                 const Spacer(),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
