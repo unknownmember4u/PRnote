@@ -6,6 +6,7 @@ import 'package:prnote/features/settings/screens/settings_screen.dart';
 import 'package:prnote/features/editor/screens/editor_screen.dart';
 import 'package:prnote/features/folders/screens/folder_view_screen.dart';
 import 'package:prnote/features/splash/screens/splash_screen.dart';
+import 'package:prnote/features/trash/screens/trash_screen.dart';
 
 /// Shell for bottom navigation (3 tabs: Home, Folders, Settings)
 class AppShell extends StatelessWidget {
@@ -142,6 +143,23 @@ final appRouter = GoRouter(
       path: '/folders/:folderId',
       pageBuilder: (context, state) => CustomTransitionPage(
         child: FolderViewScreen(folderId: state.pathParameters['folderId']!),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+            SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0.05, 0),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOutCubic,
+              )),
+              child: FadeTransition(opacity: animation, child: child),
+            ),
+      ),
+    ),
+    GoRoute(
+      path: '/trash',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        child: const TrashScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) =>
             SlideTransition(
               position: Tween<Offset>(

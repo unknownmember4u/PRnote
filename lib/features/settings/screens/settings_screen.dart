@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:prnote/core/theme/theme_provider.dart';
 import 'package:prnote/core/constants/app_constants.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -151,11 +152,12 @@ class SettingsScreen extends ConsumerWidget {
               ),
               _divider(theme),
               _SettingsTile(
-                icon: Icons.delete_sweep_outlined,
-                title: 'Clear deleted notes',
-                subtitle: 'Permanently remove trashed notes',
+                icon: Icons.delete_outline_rounded,
+                title: 'Trash',
+                subtitle: 'View, restore, or permanently remove deleted notes',
                 theme: theme,
                 iconColor: theme.colorScheme.error,
+                onTap: () => context.push('/trash'),
               ),
             ],
           ),

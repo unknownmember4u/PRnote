@@ -10,9 +10,10 @@ const _uuid = Uuid();
 
 /// Global notes state
 class NotesNotifier extends StateNotifier<AsyncValue<List<Note>>> {
+  final Ref ref;
   final NoteDao _dao = NoteDao();
 
-  NotesNotifier() : super(const AsyncValue.loading()) {
+  NotesNotifier(this.ref) : super(const AsyncValue.loading()) {
     loadNotes();
   }
 
@@ -78,16 +79,35 @@ class NotesNotifier extends StateNotifier<AsyncValue<List<Note>>> {
 
   Future<void> deleteNote(String id) async {
     await _dao.softDeleteNote(id);
+    ref.invalidate(trashNotesProvider);
     await loadNotes();
   }
 
   Future<void> permanentlyDeleteNote(String id) async {
     await _dao.permanentlyDeleteNote(id);
+    ref.invalidate(trashNotesProvider);
+    await loadNotes();
+  }
+
+  Future<void> permanentlyDeleteMultiple(List<String> ids) async {
+    for (final id in ids) {
+      await _dao.permanentlyDeleteNote(id);
+    }
+    ref.invalidate(trashNotesProvider);
     await loadNotes();
   }
 
   Future<void> restoreNote(String id) async {
     await _dao.restoreNote(id);
+    ref.invalidate(trashNotesProvider);
+    await loadNotes();
+  }
+
+  Future<void> restoreMultiple(List<String> ids) async {
+    for (final id in ids) {
+      await _dao.restoreNote(id);
+    }
+    ref.invalidate(trashNotesProvider);
     await loadNotes();
   }
 
@@ -120,7 +140,13 @@ class NotesNotifier extends StateNotifier<AsyncValue<List<Note>>> {
 /// Provider for notes state
 final notesProvider =
     StateNotifierProvider<NotesNotifier, AsyncValue<List<Note>>>((ref) {
-  return NotesNotifier();
+  return NotesNotifier(ref);
+});
+
+/// Provider for deleted (trashed) notes
+final trashNotesProvider = FutureProvider<List<Note>>((ref) async {
+  final dao = NoteDao();
+  return await dao.getDeletedNotes();
 });
 
 /// Provider for search results with debouncing

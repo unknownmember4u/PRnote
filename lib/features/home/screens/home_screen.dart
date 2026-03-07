@@ -100,7 +100,7 @@ class HomeScreen extends ConsumerWidget {
             _buildOption(
               icon: Icons.delete_outline_rounded,
               color: theme.colorScheme.error,
-              label: 'Delete Note',
+              label: 'Move to trash',
               onTap: () {
                 ref.read(notesProvider.notifier).deleteNote(note.id);
                 if (ctx.mounted) Navigator.pop(ctx);
