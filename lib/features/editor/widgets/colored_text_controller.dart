@@ -218,6 +218,7 @@ class ColoredTextController extends TextEditingController {
 
   void _addSpan(List<Map<String, dynamic>> spans, CharStyle style, int length) {
     var map = <String, dynamic>{'l': length};
+    // ignore: deprecated_member_use
     if (style.color != null) map['c'] = style.color!.value;
     if (style.isItalic) map['i'] = true;
     if (style.isUnderline) map['u'] = true;

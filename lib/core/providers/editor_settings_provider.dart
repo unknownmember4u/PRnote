@@ -119,6 +119,7 @@ class EditorSettingsNotifier extends StateNotifier<EditorSettings> {
 
   Future<void> updateTextColor(Color? color) async {
     state = state.copyWith(
+      // ignore: deprecated_member_use
       textColorValue: color?.value,
       clearTextColor: color == null,
     );
@@ -126,6 +127,7 @@ class EditorSettingsNotifier extends StateNotifier<EditorSettings> {
     if (color == null) {
       await prefs.remove(AppConstants.prefEditorTextColor);
     } else {
+      // ignore: deprecated_member_use
       await prefs.setInt(AppConstants.prefEditorTextColor, color.value);
     }
   }

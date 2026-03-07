@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:prnote/core/providers/notes_provider.dart';
 import 'package:prnote/core/theme/theme_provider.dart';
 import 'package:prnote/core/widgets/prnote_logo.dart';
 

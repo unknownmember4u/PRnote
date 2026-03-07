@@ -34,7 +34,6 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   Note? _currentNote;
   bool _isLoading = true;
   bool _hasUnsavedChanges = false;
-  DateTime? _lastSaved;
   final NoteDao _dao = NoteDao();
 
   @override
@@ -120,7 +119,6 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
     setState(() {
       _currentNote = updated;
       _hasUnsavedChanges = false;
-      _lastSaved = DateTime.now();
     });
   }
 
@@ -163,7 +161,6 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
       setState(() {
         _currentNote = updated;
         _hasUnsavedChanges = false;
-        _lastSaved = DateTime.now();
       });
     }
   }

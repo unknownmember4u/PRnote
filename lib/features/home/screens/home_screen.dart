@@ -25,7 +25,6 @@ class HomeScreen extends ConsumerWidget {
 
   void _showNoteOptions(BuildContext context, WidgetRef ref, Note note) {
     final theme = Theme.of(context);
-    final isLight = theme.brightness == Brightness.light;
 
     showModalBottomSheet(
       context: context,
@@ -78,6 +77,7 @@ class HomeScreen extends ConsumerWidget {
                 Navigator.pop(ctx);
                 final txt = '${note.plainTitle}\n\n${note.plainContent}'.trim();
                 if (txt.isNotEmpty) {
+                  // ignore: deprecated_member_use
                   Share.share(txt);
                 }
               },
@@ -91,6 +91,7 @@ class HomeScreen extends ConsumerWidget {
                 final txt = '${note.plainTitle}\n\n${note.plainContent}'.trim();
                 if (txt.isNotEmpty) {
                   // Sharing a file-like output or just standard share
+                  // ignore: deprecated_member_use
                   Share.share(txt, subject: '${note.plainTitle} Backup');
                 }
               },
