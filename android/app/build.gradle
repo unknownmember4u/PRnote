@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.prnote.prnote"
+    namespace = "com.prnote.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
