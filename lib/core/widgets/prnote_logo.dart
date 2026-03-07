@@ -45,31 +45,25 @@ class PRnoteLogo extends StatelessWidget {
               ),
               child: Text(
                 'PR',
-                style: GoogleFonts.outfit(
-                  fontSize: fontSize,
+                style: GoogleFonts.bricolageGrotesque(
+                  fontSize: fontSize * 1.05,
                   fontWeight: FontWeight.w900,
                   color: Colors.white,
-                  letterSpacing: -1,
+                  letterSpacing: -0.5,
                   height: 1.1,
                 ),
               ),
             ),
-            SizedBox(width: fontSize * 0.25),
+            SizedBox(width: fontSize * 0.15),
             Text(
               'note',
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.montserrat(
                 fontSize: fontSize * 1.1,
                 fontWeight: FontWeight.w800,
                 color: noteTextColor,
-                letterSpacing: -2,
+                letterSpacing: -1.5,
                 height: 1.1,
               ),
-            ),
-            SizedBox(width: fontSize * 0.15),
-            Icon(
-              Icons.auto_awesome_rounded,
-              size: fontSize * 0.7,
-              color: theme.colorScheme.primary,
             ),
           ],
         ),

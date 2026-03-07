@@ -38,10 +38,10 @@ class EditorSettings {
     );
   }
 
-  TextStyle getTextStyle({Color? color, FontWeight? fontWeight, double? height, double? letterSpacing, double? fontSizeOverride}) {
+  TextStyle getTextStyle({Color? defaultColor, FontWeight? fontWeight, double? heightOverride, double? letterSpacing, double? fontSizeOverride}) {
     final effectiveSize = fontSizeOverride ?? fontSize;
-    final effectiveColor = color ?? textColor;
-    final effectiveHeight = height ?? lineHeight;
+    final effectiveColor = textColor ?? defaultColor;
+    final effectiveHeight = heightOverride ?? lineHeight;
     
     switch (fontFamily) {
       case 'Roboto':

@@ -518,10 +518,10 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
           curve: Curves.easeOutBack,
           child: FloatingActionButton.extended(
             onPressed: _manualSave,
-            backgroundColor: const Color(0xFF26A69A),
-            foregroundColor: Colors.white,
+            backgroundColor: theme.colorScheme.primary, // Yellow theme color
+            foregroundColor: Colors.black87, // High contrast with yellow
             icon: const Icon(Icons.save_rounded),
-            label: Text('Save Note', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+            label: Text('Save Note', style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
           ),
         ),
         body: Column(
@@ -544,8 +544,8 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                       style: ref.watch(editorSettingsProvider).getTextStyle(
                         fontSizeOverride: 26,
                         fontWeight: FontWeight.w700,
-                        color: theme.textTheme.displayLarge?.color,
-                        height: 1.3,
+                        defaultColor: theme.textTheme.displayLarge?.color,
+                        heightOverride: 1.3,
                         letterSpacing: -0.3,
                       ),
                       decoration: InputDecoration(
@@ -568,13 +568,50 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                     if (_currentNote != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 4, bottom: 16),
-                        child: Text(
-                          DateFormat('MMM d, yyyy · h:mm a').format(_currentNote!.updatedAt),
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.4),
-                          ),
+                        child: Row(
+                          children: [
+                            Text(
+                              DateFormat('MMM d, yyyy · h:mm a').format(_currentNote!.updatedAt),
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.4),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              '·',
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.4),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            if (!_hasUnsavedChanges) ...[
+                              Icon(Icons.cloud_done_rounded, size: 14, color: theme.colorScheme.primary),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Saved',
+                                style: GoogleFonts.inter(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.4),
+                                ),
+                              ),
+                            ] else ...[
+                              Icon(Icons.edit_note_rounded, size: 16, color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.4)),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Unsaved changes',
+                                style: GoogleFonts.inter(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.4),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
 
@@ -583,8 +620,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                       controller: _contentController,
                       style: ref.watch(editorSettingsProvider).getTextStyle(
                         fontWeight: FontWeight.w400,
-                        color: theme.textTheme.bodyLarge?.color,
-                        height: 1.7,
+                        defaultColor: theme.textTheme.bodyLarge?.color,
                         letterSpacing: 0.1,
                       ),
                       decoration: InputDecoration(
@@ -987,10 +1023,10 @@ class _FontSettingsBottomSheet extends ConsumerWidget {
                     alignment: Alignment.center,
                     child: Text(
                       font,
-                      style: settings.copyWith(fontFamily: font).getTextStyle(
+                      style: settings.copyWith(fontFamily: font, clearTextColor: true).getTextStyle(
                         fontSizeOverride: 14,
                         fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                        color: isSelected ? Colors.white : theme.textTheme.bodyLarge?.color,
+                        defaultColor: isSelected ? Colors.white : theme.textTheme.bodyLarge?.color,
                       ),
                     ),
                   ),
