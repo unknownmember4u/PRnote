@@ -11,6 +11,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:prnote/core/providers/editor_settings_provider.dart';
 
 enum _EditorMenuAction { share, copyText, versionHistory, moveToTrash }
 
@@ -367,7 +368,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
           children: [
             SizedBox(height: topPadding),
             // Toolbar
-            _buildToolbar(theme, isLight),
+            _buildToolbar(theme, isLight, ref.watch(editorSettingsProvider)),
 
             // Editor
             Expanded(
@@ -380,8 +381,8 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                     // Title field
                     TextField(
                       controller: _titleController,
-                      style: GoogleFonts.inter(
-                        fontSize: 26,
+                      style: ref.watch(editorSettingsProvider).getTextStyle(
+                        fontSizeOverride: 26,
                         fontWeight: FontWeight.w700,
                         color: theme.textTheme.displayLarge?.color,
                         height: 1.3,
@@ -461,8 +462,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                     // Content field
                     TextField(
                       controller: _contentController,
-                      style: GoogleFonts.inter(
-                        fontSize: 16,
+                      style: ref.watch(editorSettingsProvider).getTextStyle(
                         fontWeight: FontWeight.w400,
                         color: theme.textTheme.bodyLarge?.color,
                         height: 1.7,
@@ -493,7 +493,18 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
     );
   }
 
-  Widget _buildToolbar(ThemeData theme, bool isLight) {
+  void _showFontSettingsSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => _FontSettingsBottomSheet(),
+    );
+  }
+
+  Widget _buildToolbar(ThemeData theme, bool isLight, EditorSettings settings) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
       decoration: BoxDecoration(
@@ -565,6 +576,15 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                 });
               }
             },
+          ),
+
+          // Font options toggle
+          _ToolbarAction(
+            icon: Icons.text_format_rounded,
+            isActive: false,
+            activeColor: theme.colorScheme.primary,
+            inactiveColor: theme.textTheme.bodySmall?.color ?? Colors.grey,
+            onTap: _showFontSettingsSheet,
           ),
 
           // Favorite toggle
@@ -724,3 +744,121 @@ class _ShareOption extends StatelessWidget {
     );
   }
 }
+
+// ─── Font Settings Bottom Sheet ───────────────────────
+class _FontSettingsBottomSheet extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final settings = ref.watch(editorSettingsProvider);
+    final isLight = theme.brightness == Brightness.light;
+
+    return Container(
+      padding: const EdgeInsets.only(left: 20, right: 20, top: 16, bottom: 40),
+      decoration: BoxDecoration(
+        color: isLight ? Colors.white : theme.colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Handle
+          Center(
+            child: Container(
+              width: 40, height: 4,
+              decoration: BoxDecoration(
+                color: theme.dividerColor,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Typography',
+            style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 24),
+
+          // Size slider
+          Row(
+            children: [
+              Text('A', style: GoogleFonts.inter(fontSize: 14)),
+              Expanded(
+                child: SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    activeTrackColor: theme.colorScheme.primary,
+                    inactiveTrackColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+                    thumbColor: theme.colorScheme.primary,
+                    overlayColor: theme.colorScheme.primary.withValues(alpha: 0.2),
+                    trackHeight: 4,
+                  ),
+                  child: Slider(
+                    value: settings.fontSize,
+                    min: 12.0,
+                    max: 32.0,
+                    divisions: 20,
+                    onChanged: (val) {
+                      ref.read(editorSettingsProvider.notifier).updateFontSize(val);
+                    },
+                  ),
+                ),
+              ),
+              Text('A', style: GoogleFonts.inter(fontSize: 22)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          
+          // Font family selection
+          Text(
+            'Font Family',
+            style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: theme.textTheme.bodySmall?.color),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 48,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              itemCount: EditorSettings.availableFonts.length,
+              separatorBuilder: (context, index) => const SizedBox(width: 8),
+              itemBuilder: (context, index) {
+                final font = EditorSettings.availableFonts[index];
+                final isSelected = settings.fontFamily == font;
+                
+                return InkWell(
+                  onTap: () {
+                    ref.read(editorSettingsProvider.notifier).updateFontFamily(font);
+                  },
+                  borderRadius: BorderRadius.circular(24),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isSelected ? theme.colorScheme.primary : theme.colorScheme.primary.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: isSelected ? theme.colorScheme.primary : Colors.transparent,
+                        width: 1,
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      font,
+                      style: settings.copyWith(fontFamily: font).getTextStyle(
+                        fontSizeOverride: 14,
+                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                        color: isSelected ? Colors.white : theme.textTheme.bodyLarge?.color,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+

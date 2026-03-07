@@ -18,6 +18,8 @@ class AppConstants {
   static const String prefThemeMode = 'theme_mode';
   static const String prefLastEditedNoteId = 'last_edited_note_id';
   static const String prefIsFirstLaunch = 'is_first_launch';
+  static const String prefEditorFontSize = 'editor_font_size';
+  static const String prefEditorFontFamily = 'editor_font_family';
 
   // Theme modes
   static const String themeModeLight = 'light';

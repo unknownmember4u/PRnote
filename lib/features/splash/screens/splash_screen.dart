@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:prnote/core/providers/notes_provider.dart';
 import 'package:prnote/core/theme/theme_provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:prnote/core/widgets/prnote_logo.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -86,7 +85,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     ));
 
     final bgColor = theme.scaffoldBackgroundColor;
-    final subtitleColor = isLight ? Colors.black38 : Colors.white38;
 
     return Scaffold(
       backgroundColor: bgColor,
