@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:prnote/core/providers/folders_provider.dart';
+import 'package:prnote/core/providers/notes_provider.dart';
+import 'package:prnote/models/folder.dart';
+import 'package:prnote/models/note.dart';
 import 'package:prnote/core/constants/app_constants.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -11,10 +14,10 @@ class FoldersScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final foldersAsync = ref.watch(foldersProvider);
+    final notesAsync = ref.watch(notesProvider);
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
     final topPadding = MediaQuery.of(context).padding.top;
-    final isLight = theme.brightness == Brightness.light;
 
     return Scaffold(
       body: Column(
@@ -108,146 +111,70 @@ class FoldersScreen extends ConsumerWidget {
                 ),
               ),
               data: (allFolders) {
-                final folders = allFolders.where((f) => f.parentId == null).toList();
-                
-                if (folders.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(22),
-                          decoration: BoxDecoration(
-                            color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.06),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.folder_open_rounded,
-                            size: 36,
-                            color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.35),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          'No folders yet',
-                          style: GoogleFonts.inter(
-                            fontSize: 17, fontWeight: FontWeight.w600,
-                            color: theme.textTheme.bodyMedium?.color,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Organize your notes into folders',
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.5),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                return GridView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
-                  physics: const BouncingScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 1.25,
-                  ),
-                  itemCount: folders.length,
-                  itemBuilder: (context, index) {
-                    final folder = folders[index];
-                    final noteCount = ref.watch(folderNoteCountProvider(folder.id));
-                    final isDefault = folder.id == AppConstants.defaultFolderId;
-                    final folderColor = _getFolderColor(index);
-
-                    return Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(18),
-                        splashColor: folderColor.withValues(alpha: 0.08),
-                        onTap: () => context.push('/folders/${folder.id}'),
-                        onLongPress: isDefault
-                            ? null
-                            : () => _showFolderOptions(context, ref, folder.id, folder.name),
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: theme.cardTheme.color,
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(
-                              color: theme.dividerColor.withValues(alpha: isLight ? 0.3 : 0.2),
-                              width: 0.5,
+                return notesAsync.when(
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (e, _) => const Center(child: Text('Error loading notes')),
+                  data: (allNotes) {
+                    final folders = allFolders.where((f) => f.parentId == null).toList();
+                    final rootNotes = allNotes.where((n) => n.folderId == null && !n.isDeleted).toList();
+                    
+                    if (folders.isEmpty && rootNotes.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(22),
+                              decoration: BoxDecoration(
+                                color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.06),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.account_tree_rounded,
+                                size: 36,
+                                color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.35),
+                              ),
                             ),
-                            boxShadow: isLight
-                                ? [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.03),
-                                      blurRadius: 6,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ]
-                                : null,
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              // Icon
-                              Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: folderColor.withValues(alpha: 0.12),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Icon(
-                                  isDefault ? Icons.notes_rounded : Icons.folder_rounded,
-                                  color: folderColor,
-                                  size: 22,
-                                ),
+                            const SizedBox(height: 20),
+                            Text(
+                              'Tree is empty',
+                              style: GoogleFonts.inter(
+                                fontSize: 17, fontWeight: FontWeight.w600,
+                                color: theme.textTheme.bodyMedium?.color,
                               ),
-                              // Name + count
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    folder.name,
-                                    style: GoogleFonts.inter(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: theme.textTheme.titleMedium?.color,
-                                      letterSpacing: -0.1,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 3),
-                                  noteCount.when(
-                                    data: (count) => Text(
-                                      '$count note${count != 1 ? 's' : ''}',
-                                      style: GoogleFonts.inter(
-                                        fontSize: 12,
-                                        color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.55),
-                                      ),
-                                    ),
-                                    loading: () => Container(
-                                      width: 30, height: 10,
-                                      decoration: BoxDecoration(
-                                        color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.08),
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                    ),
-                                    error: (_, __) => const SizedBox(),
-                                  ),
-                                ],
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              'Create folders to build your structure',
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.5),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                      ),
+                      );
+                    }
+
+                    return ListView(
+                      padding: const EdgeInsets.only(bottom: 100),
+                      physics: const BouncingScrollPhysics(),
+                      children: [
+                        ...folders.map((folder) => _FolderNode(
+                          folder: folder,
+                          allFolders: allFolders,
+                          allNotes: allNotes,
+                          depth: 0,
+                          folderColor: _getFolderColor(folders.indexOf(folder)),
+                          onLongPress: (ctx, r, id, name) => _showFolderOptions(ctx, r, id, name),
+                        )),
+                        if (folders.isNotEmpty && rootNotes.isNotEmpty)
+                           Padding(
+                             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                             child: Divider(color: theme.dividerColor.withValues(alpha: 0.2)),
+                           ),
+                        ...rootNotes.map((note) => _NoteNode(note: note, depth: 0)),
+                      ],
                     );
                   },
                 );
@@ -441,6 +368,197 @@ class FoldersScreen extends ConsumerWidget {
             child: Text('Rename', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ─── Folder Tree Node ────────────────────────────────────────────────────────
+
+class _FolderNode extends ConsumerStatefulWidget {
+  final Folder folder;
+  final List<Folder> allFolders;
+  final List<Note> allNotes;
+  final int depth;
+  final Color folderColor;
+  final void Function(BuildContext ctx, WidgetRef ref, String id, String name) onLongPress;
+
+  const _FolderNode({
+    required this.folder,
+    required this.allFolders,
+    required this.allNotes,
+    required this.depth,
+    required this.folderColor,
+    required this.onLongPress,
+  });
+
+  @override
+  ConsumerState<_FolderNode> createState() => _FolderNodeState();
+}
+
+class _FolderNodeState extends ConsumerState<_FolderNode> {
+  bool _isExpanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final subFolders = widget.allFolders.where((f) => f.parentId == widget.folder.id).toList();
+    final folderNotes = widget.allNotes.where((n) => n.folderId == widget.folder.id && !n.isDeleted).toList();
+    
+    final hasChildren = subFolders.isNotEmpty || folderNotes.isNotEmpty;
+    final isDefault = widget.folder.id == AppConstants.defaultFolderId;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              if (hasChildren) {
+                setState(() => _isExpanded = !_isExpanded);
+              } else {
+                context.push('/folders/${widget.folder.id}');
+              }
+            },
+            onLongPress: isDefault ? null : () => widget.onLongPress(context, ref, widget.folder.id, widget.folder.name),
+            child: Padding(
+              padding: EdgeInsets.only(
+                left: 10.0 + (widget.depth * 20.0),
+                right: 12.0,
+                top: 8.0,
+                bottom: 8.0,
+              ),
+              child: Row(
+                children: [
+                  // Expand chevron
+                  if (hasChildren)
+                    GestureDetector(
+                      onTap: () => setState(() => _isExpanded = !_isExpanded),
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        color: Colors.transparent,
+                        child: Icon(
+                          _isExpanded ? Icons.expand_more_rounded : Icons.chevron_right_rounded,
+                          size: 22,
+                          color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                        ),
+                      ),
+                    )
+                  else
+                    const SizedBox(width: 30),
+                  
+                  // Folder icon
+                  Icon(
+                    isDefault ? Icons.notes_rounded : (_isExpanded ? Icons.folder_open_rounded : Icons.folder_rounded),
+                    color: widget.folderColor,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 12),
+                  
+                  // Name
+                  Expanded(
+                    child: Text(
+                      widget.folder.name,
+                      style: GoogleFonts.inter(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: theme.textTheme.bodyLarge?.color,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  
+                  // Empty indicator
+                  if (!hasChildren)
+                     Text(
+                       'Empty',
+                       style: GoogleFonts.inter(
+                         fontSize: 12,
+                         color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.5),
+                       ),
+                     ),
+                     
+                  // Action chevron to full view
+                  IconButton(
+                    icon: Icon(Icons.arrow_forward_ios_rounded, size: 14, color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.3)),
+                    onPressed: () => context.push('/folders/${widget.folder.id}'),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        
+        // Children mapping
+        if (_isExpanded)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ...subFolders.map((childFolder) => _FolderNode(
+                folder: childFolder,
+                allFolders: widget.allFolders,
+                allNotes: widget.allNotes,
+                depth: widget.depth + 1,
+                // Inherited or rotated color
+                folderColor: widget.folderColor.withValues(alpha: 0.9),
+                onLongPress: widget.onLongPress,
+              )),
+              ...folderNotes.map((note) => _NoteNode(
+                note: note,
+                depth: widget.depth + 1,
+              )),
+            ],
+          ),
+      ],
+    );
+  }
+}
+
+// ─── Note Tree Node ──────────────────────────────────────────────────────────
+
+class _NoteNode extends StatelessWidget {
+  final Note note;
+  final int depth;
+
+  const _NoteNode({required this.note, required this.depth});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => context.push('/editor/${note.id}'),
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: 10.0 + (depth * 20.0) + 30.0,
+            right: 16.0,
+            top: 10.0, 
+            bottom: 10.0,
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.description_outlined, size: 20, color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.5)),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  note.title.isNotEmpty ? note.title : 'Untitled',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: theme.textTheme.bodyMedium?.color,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
