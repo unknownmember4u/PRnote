@@ -432,12 +432,12 @@ class _SearchResultCard extends StatelessWidget {
               children: [
                 // Title with highlight
                 _HighlightedText(
-                  text: note.title.isNotEmpty ? note.title : 'Untitled',
+                  text: note.plainTitle.isNotEmpty ? note.plainTitle : 'Untitled',
                   query: query,
                   style: GoogleFonts.inter(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: note.title.isNotEmpty
+                    color: note.plainTitle.isNotEmpty
                         ? theme.textTheme.titleMedium?.color
                         : theme.textTheme.bodySmall?.color?.withValues(alpha: 0.5),
                   ),

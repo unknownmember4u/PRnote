@@ -70,14 +70,13 @@ class NoteCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 10),
                     ],
-                    // Title
                     Expanded(
                       child: Text(
-                        note.title.isEmpty ? 'Untitled' : note.title,
+                        note.plainTitle.isEmpty ? 'Untitled' : note.plainTitle,
                         style: GoogleFonts.inter(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: note.title.isEmpty
+                          color: note.plainTitle.isEmpty
                               ? theme.textTheme.bodySmall?.color?.withValues(alpha: 0.5)
                               : theme.textTheme.titleLarge?.color,
                           letterSpacing: -0.2,

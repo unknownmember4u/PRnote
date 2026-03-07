@@ -18,6 +18,11 @@ class Note extends Equatable {
     return idx != -1 ? content.substring(0, idx) : content;
   }
 
+  String get plainTitle {
+    final idx = title.indexOf('\u200B\u200B\u200BCOLOR_SPANS:');
+    return idx != -1 ? title.substring(0, idx) : title;
+  }
+
   const Note({
     required this.id,
     required this.title,

@@ -26,8 +26,10 @@ class EditorScreen extends ConsumerStatefulWidget {
 }
 
 class _EditorScreenState extends ConsumerState<EditorScreen> {
-  late TextEditingController _titleController;
+  late ColoredTextController _titleController;
   late ColoredTextController _contentController;
+  late FocusNode _titleFocusNode;
+  late FocusNode _contentFocusNode;
   Timer? _autoSaveTimer;
   Note? _currentNote;
   bool _isLoading = true;
@@ -38,9 +40,21 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController();
+    _titleController = ColoredTextController();
     _contentController = ColoredTextController();
+    _titleFocusNode = FocusNode();
+    _contentFocusNode = FocusNode();
     _loadNote();
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _contentController.dispose();
+    _titleFocusNode.dispose();
+    _contentFocusNode.dispose();
+    _autoSaveTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadNote() async {
@@ -64,7 +78,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
 
       setState(() {
         _currentNote = note;
-        _titleController.text = note.title;
+        _titleController.deserializeContent(note.title);
         _contentController.deserializeContent(note.content);
         _isLoading = false;
       });
@@ -95,7 +109,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
     if (_currentNote == null || !_hasUnsavedChanges) return;
 
     final updated = _currentNote!.copyWith(
-      title: _titleController.text,
+      title: _titleController.serializedContent,
       content: _contentController.serializedContent,
       updatedAt: DateTime.now(),
     );
@@ -140,7 +154,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
     _autoSaveTimer?.cancel();
     if (_hasUnsavedChanges && _currentNote != null) {
       final updated = _currentNote!.copyWith(
-        title: _titleController.text,
+        title: _titleController.serializedContent,
         content: _contentController.serializedContent,
       );
       await ref.read(notesProvider.notifier).updateNote(updated);
@@ -376,7 +390,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                                   child: Text('v${version.versionNumber}', 
                                     style: GoogleFonts.inter(color: theme.colorScheme.primary, fontWeight: FontWeight.w700, fontSize: 13)),
                                 ),
-                                title: Text(version.title.isEmpty ? 'Untitled' : version.title,
+                                title: Text(version.plainTitle.isEmpty ? 'Untitled' : version.plainTitle,
                                   style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 15), maxLines: 1),
                                 subtitle: Text(date,
                                   style: GoogleFonts.inter(color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.6), fontSize: 13)),
@@ -408,7 +422,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   }
 
   void _restoreVersion(NoteVersion version) {
-    _titleController.text = version.title;
+    _titleController.deserializeContent(version.title);
     _contentController.deserializeContent(version.content);
     _onTextChanged();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -542,6 +556,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                     // Title field
                     TextField(
                       controller: _titleController,
+                      focusNode: _titleFocusNode,
                       style: ref.watch(editorSettingsProvider).getTextStyle(
                         fontSizeOverride: 26,
                         fontWeight: FontWeight.w700,
@@ -619,6 +634,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                     // Content field
                     TextField(
                       controller: _contentController,
+                      focusNode: _contentFocusNode,
                       style: ref.watch(editorSettingsProvider).getTextStyle(
                         fontWeight: FontWeight.w400,
                         defaultColor: theme.textTheme.bodyLarge?.color,
@@ -650,13 +666,18 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   }
 
   void _showFontSettingsSheet() {
+    ColoredTextController activeController = _contentController;
+    if (_titleFocusNode.hasFocus) {
+      activeController = _titleController;
+    }
+    
     showModalBottomSheet(
       context: context,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (ctx) => _FontSettingsBottomSheet(controller: _contentController),
+      builder: (ctx) => _FontSettingsBottomSheet(controller: activeController),
     );
   }
 

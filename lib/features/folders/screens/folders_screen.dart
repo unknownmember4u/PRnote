@@ -546,7 +546,7 @@ class _NoteNode extends StatelessWidget {
               const SizedBox(width: 14),
               Expanded(
                 child: Text(
-                  note.title.isNotEmpty ? note.title : 'Untitled',
+                  note.plainTitle.isNotEmpty ? note.plainTitle : 'Untitled',
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
